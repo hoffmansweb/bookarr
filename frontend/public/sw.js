@@ -4,7 +4,7 @@
 // as a stale-while-revalidate cache for the static app shell. Everything else - API JSON above
 // all - goes straight to the network.
 const CACHE_PREFIX = 'bookarr-cache-';
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const BOOKS_CACHE = 'bookarr-books';
 const BOOK_FILE = /^\/api\/books\/[^/]+\/file/;
 
@@ -55,9 +55,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Same-origin static output: the app shell, JS/CSS chunks, icons.
+  // The HTML document (navigation requests) must stay fresh: it names the current JS/CSS
+  // bundle, so serving it stale left an old bundle in place after an update and an old UI kept
+  // calling the API with the old bug. Network-first with a cache fallback keeps the app usable
+  // offline without pinning an old build.
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Same-origin static output: JS/CSS chunks, icons (all hashed/immutable).
   event.respondWith(staleWhileRevalidate(request));
 });
+
+// Network-first for the entry document: get the latest index.html, fall back to the cached
+// copy when there is no connection.
+async function networkFirst(request) {
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse && networkResponse.status === 200) {
+      const copy = networkResponse.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
+    }
+    return networkResponse;
+  } catch (error) {
+    const cached = await caches.match(request);
+    return cached || Response.error();
+  }
+}
 
 // Cache-first: a file that already sits on disk does not change under us.
 async function bookFile(request) {
