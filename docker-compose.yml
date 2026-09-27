@@ -1,6 +1,6 @@
 services:
   bookarr:
-    image: ghcr.io/${GITHUB_USER:-your-username}/bookarr:latest
+    image: ghcr.io/${GITHUB_USER:-hoffmansweb}/bookarr:latest
     container_name: bookarr
     ports:
       - "${BOOKARR_PORT:-5000}:5000"
