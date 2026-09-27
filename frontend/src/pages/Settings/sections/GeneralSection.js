@@ -162,7 +162,7 @@ const GeneralSection = ({ settings, set, reload }) => {
         <Grid>
           <Field label="API Key">
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <TextInput type="password" value={settings.api_key || ''} onChange={(v) => set('api_key', v)} readOnly={!settings.api_key} />
+              <TextInput type="text" value={settings.api_key || ''} onChange={(v) => set('api_key', v)} readOnly />
               {settings.api_key && (
                 <button 
                   type="button" 
@@ -170,9 +170,21 @@ const GeneralSection = ({ settings, set, reload }) => {
                   onClick={() => { navigator.clipboard.writeText(settings.api_key); toast.success('API Key copied to clipboard'); }}
                   style={{ padding: '6px 12px' }}
                 >
-                  ?? Copy
+                  📋 Copy
                 </button>
               )}
+              <button 
+                type="button" 
+                className="s-btn" 
+                onClick={() => { 
+                  const newKey = Array.from(window.crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+                  set('api_key', newKey);
+                  toast.info('New key generated! Remember to Save Changes.'); 
+                }}
+                style={{ padding: '6px 12px' }}
+              >
+                🔄 Generate New
+              </button>
             </div>
           </Field>
         </Grid>
