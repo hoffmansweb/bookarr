@@ -8,7 +8,7 @@
   <p>
     <a href="https://github.com/hoffmansweb/bookarr/releases"><img src="https://img.shields.io/badge/release-v0.1.0-blue?style=flat-square" alt="Latest Release"></a>
     <a href="https://github.com/hoffmansweb/bookarr/pkgs/container/bookarr"><img src="https://img.shields.io/badge/ghcr.io-hoffmansweb%2Fbookarr-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Image"></a>
-    <a href="https://github.com/hoffmansweb/bookarr/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"></a>
+    <a href="https://github.com/hoffmansweb/bookarr/blob/master/LICENSE"><img src="https://img.shields.io/github/license/hoffmansweb/bookarr?style=flat-square" alt="License"></a>
   </p>
 </div>
 
