@@ -38,7 +38,14 @@ const io = socketIo(server, {
   cors: { origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }
 });
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
+// exposedHeaders: the dev frontend (localhost:3000 -> :5000) reads Content-Disposition to name a
+// downloaded backup correctly; without it the header is invisible cross-origin and the browser
+// falls back to "bookarr-backup.sqlite" even for a .zip bundle.
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+  exposedHeaders: ['Content-Disposition', 'X-Bookarr-Backup-Format']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

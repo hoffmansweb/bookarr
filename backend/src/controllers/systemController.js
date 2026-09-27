@@ -382,6 +382,19 @@ function assertSqliteHeader(file) {
   }
 }
 
+// A .zip named .sqlite (or the reverse) must still be read correctly: a browser's default
+// download name and a hand rename are unreliable, but the first two bytes are not.
+function isZipFile(file) {
+  const fd = fs.openSync(file, 'r');
+  const header = Buffer.alloc(2);
+  try {
+    fs.readSync(fd, header, 0, 2, 0);
+  } finally {
+    fs.closeSync(fd);
+  }
+  return header[0] === 0x50 && header[1] === 0x4b; // "PK"
+}
+
 // Runs SQLite's own integrity check and returns a row count per table
 async function inspectDatabase(file) {
   const db = await openReadOnly(file);
@@ -473,7 +486,7 @@ async function libraryInventory(file) {
 // metadata.json and config/*.txt out of a bundle. A raw .sqlite export (older Bookarr) has neither.
 function readBundleExtras(uploadPath, uploadName) {
   const empty = { config: [], expectedSha256: null };
-  if (/\.(sqlite3?|db)$/i.test(uploadName || '')) return empty;
+  if (!isZipFile(uploadPath)) return empty;
 
   let entries;
   try {
@@ -511,9 +524,11 @@ function readBundleExtras(uploadPath, uploadName) {
 // Thrown for anything the user uploaded that is not a usable Bookarr backup (-> HTTP 400)
 class InvalidBackupError extends Error {}
 
-// Accepts a raw .sqlite/.sqlite3/.db (older exports) or the .zip bundle this controller writes
+// Accepts a raw .sqlite/.sqlite3/.db (older exports) or the .zip bundle this controller writes.
+// The type is read from the content, not the filename: a rename (or a browser defaulting to
+// ".sqlite" when it cannot read Content-Disposition) must not turn a good archive into an error.
 function extractDatabaseFromUpload(uploadPath, uploadName) {
-  if (/\.(sqlite3?|db)$/i.test(uploadName || '')) {
+  if (!isZipFile(uploadPath)) {
     assertSqliteHeader(uploadPath);
     return uploadPath;
   }
