@@ -154,10 +154,17 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    await initializeDatabase();
-    
     await sequelize.authenticate();
     logger.info('Database connected');
+
+    // Create any missing tables first. Plain sync() only creates tables that are absent
+    // (it never alters existing ones), so existing databases are untouched. This must run
+    // before the migrations below, which ALTER existing tables: on a fresh install the
+    // database is empty and they would otherwise fail with "no such table: Users".
+    await sequelize.sync();
+    logger.info('Database synced');
+
+    await initializeDatabase();
 
     // Run TTS settings migration
     const addTTSSettings = require('./migrations/addTTSSettings');
@@ -194,9 +201,6 @@ const startServer = async () => {
       await sequelize.query("ALTER TABLE Books ADD COLUMN ttsQueued BOOLEAN DEFAULT 0");
     } catch (e) {}
     logger.info('UserBooks table synced');
-
-    await sequelize.sync();
-    logger.info('Database synced');
 
     // Test SOCKS proxy if configured
     if (process.env.SOCKS_PROXY) {

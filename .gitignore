@@ -31,3 +31,9 @@ scratch_*.js
 backend/*.png
 backend/*.html
 
+
+# ...but the env templates must ship: docker-compose.yml and the README/INSTALL docs tell people to
+# copy them into place (they are matched by ".env.*" above, so re-include them here).
+!.env.docker
+!.env.example
+

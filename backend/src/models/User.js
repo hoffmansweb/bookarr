@@ -17,7 +17,17 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: { isEmail: true }
+    // Mirrors the /register rule in backend/src/routes/auth.js: "something@something" is enough,
+    // because a self-hosted install often uses admin@bookarr or admin@localhost and Bookarr never
+    // sends mail. Sequelize's built-in isEmail demands a public TLD and rejected those with a raw
+    // "Validation isEmail on email failed" (surfacing as a 400/500 during the first registration).
+    validate: {
+      looksLikeEmail(value) {
+        if (!/^[^\s@]+@[^\s@]+$/.test(String(value))) {
+          throw new Error('Enter a valid email address, e.g. you@example.com');
+        }
+      }
+    }
   },
   password: {
     type: DataTypes.STRING,

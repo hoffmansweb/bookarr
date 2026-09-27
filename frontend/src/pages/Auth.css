@@ -72,3 +72,28 @@
     margin-bottom: 20px;
   }
 }
+
+/* Field-level feedback. #f4212e is the app's error red (Activity.css / SystemStatus.css);
+   the negative margin keeps a message attached to the field it belongs to, given the form's
+   15px gap. */
+.auth-card .auth-error {
+  color: #f4212e;
+  font-size: 13px;
+  line-height: 1.3;
+  margin-top: -8px;
+}
+
+.auth-card .auth-hint {
+  color: #8b98a5;
+  font-size: 12px;
+  margin-top: -8px;
+}
+
+.auth-card input[aria-invalid='true'] {
+  border-color: #f4212e;
+}
+
+.auth-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

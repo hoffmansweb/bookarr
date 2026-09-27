@@ -81,9 +81,14 @@ Edit `backend\.env` file:
 
 ```env
 PORT=5000
-JWT_SECRET=your-secret-key-here
+JWT_SECRET=
 GOOGLE_BOOKS_API_KEY=your-api-key-here
 ```
+
+Leave `JWT_SECRET` blank (or delete the line) and Bookarr generates a random secret on first start,
+stored in `backend\.jwt_secret` next to the database. Placeholder values copied from the example
+files — `<your-secure-random-secret-here>`, `your-secret-key-here` and friends — are ignored,
+because a signing key that is published in the docs would let anyone forge a login token.
 
 ## Running Bookarr
 

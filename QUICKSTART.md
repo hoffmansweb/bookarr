@@ -18,7 +18,7 @@ npm install
 # Configure environment (already created with defaults)
 # Edit .env file if needed:
 # - Add GOOGLE_BOOKS_API_KEY (optional but recommended)
-# - Set JWT_SECRET to any random string
+# - Set JWT_SECRET to any random string, or leave it blank to have one generated on first start
 
 # Start backend server (database will be created automatically)
 npm run dev

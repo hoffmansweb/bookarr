@@ -22,6 +22,10 @@ if [ "$PUID" != "0" ] || [ "$PGID" != "0" ]; then
     # Only the app's own state and scratch space - never recurse into an existing library.
     chown -R "$PUID:$PGID" /app/data /app/tts/cache 2>/dev/null || true
     chown "$PUID:$PGID" "${BOOKARR_WORK_DIR:-/downloads/.bookarr-work}" 2>/dev/null || true
+    # The image's HOME points at /root, which the downgraded user cannot read. Puppeteer's
+    # config lookup (cosmiconfig) stats $HOME/.config on startup and would crash with EACCES,
+    # so point HOME at the app's own (already-chowned) data directory instead.
+    export HOME=/app/data
     echo "Running as UID $PUID / GID $PGID"
     set -- setpriv --reuid="$PUID" --regid="$PGID" --clear-groups "$@"
   else

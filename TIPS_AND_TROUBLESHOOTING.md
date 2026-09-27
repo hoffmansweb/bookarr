@@ -121,7 +121,8 @@ type backend\logs\error.log
 
 **Solution:**
 - Check if port 5000 is already in use
-- Check `backend/.env` exists and has `JWT_SECRET` set
+- Check `backend/.env` exists; `JWT_SECRET` may be left blank — Bookarr generates one into
+  `backend/.jwt_secret` on first start
 - The database is a SQLite file at `backend/database.sqlite` — make sure that folder is writable
 - Review error logs
 
@@ -143,7 +144,11 @@ docker compose exec bookarr ls -l /app/data
 
 #### Problem: JWT authentication errors
 **Solution:**
-- Check `JWT_SECRET` is set in `.env`
+- `JWT_SECRET` may be blank: the signing key lives in `backend/.jwt_secret` (Docker:
+  `/app/data/.jwt_secret`) and is generated on first start. Deleting that file, or changing
+  `JWT_SECRET` to a different value, signs everybody out — log in again to get a fresh token
+- Placeholder values such as `<your-secure-random-secret-here>` are ignored on purpose (a published
+  key would let anyone forge a token); a real key is generated instead
 - Ensure token is being sent in headers
 - Verify token hasn't expired
 - Clear localStorage and login again
