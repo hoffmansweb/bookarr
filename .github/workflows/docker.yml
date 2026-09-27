@@ -2,7 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [main]
+    # master is this repo's default branch; main is kept for renames/forks
+    branches: [master, main]
     tags: ['v*']
   # Catch a broken image before it is merged
   pull_request:
