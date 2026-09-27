@@ -220,9 +220,9 @@ const SystemStatus = ({ embedded = false }) => {
                   The ultimate self-hosted Ebook and Audiobook Library Manager.
                 </p>
                 <div style={{ marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <a href="https://github.com/YourUsername/Bookarr" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>📦 GitHub Repository</a>
-                  <a href="https://github.com/YourUsername/Bookarr/issues" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>🐛 Report a Bug</a>
-                  <a href="https://github.com/YourUsername/Bookarr/discussions" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>💬 Discussions</a>
+                  <a href="https://github.com/hoffmansweb/bookarr" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>📦 GitHub Repository</a>
+                  <a href="https://github.com/hoffmansweb/bookarr/issues" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>🐛 Report a Bug</a>
+                  <a href="https://github.com/hoffmansweb/bookarr/discussions" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>💬 Discussions</a>
                 </div>
                 <div style={{ marginTop: '40px', padding: '20px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '12px', width: '100%', maxWidth: '400px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>

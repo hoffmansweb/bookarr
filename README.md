@@ -6,9 +6,9 @@
   <p><strong>The ultimate self-hosted Ebook and Audiobook Library Manager.</strong></p>
 
   <p>
-    <a href="https://github.com/YourUsername/Bookarr/releases"><img src="https://img.shields.io/github/v/release/YourUsername/Bookarr?style=flat-square" alt="Latest Release"></a>
-    <a href="https://hub.docker.com/r/YourUsername/bookarr"><img src="https://img.shields.io/docker/pulls/YourUsername/bookarr?style=flat-square" alt="Docker Pulls"></a>
-    <a href="https://github.com/YourUsername/Bookarr/blob/master/LICENSE"><img src="https://img.shields.io/github/license/YourUsername/Bookarr?style=flat-square" alt="License"></a>
+    <a href="https://github.com/hoffmansweb/bookarr/releases"><img src="https://img.shields.io/github/v/release/hoffmansweb/bookarr?style=flat-square" alt="Latest Release"></a>
+    <a href="https://hub.docker.com/r/hoffmansweb/bookarr"><img src="https://img.shields.io/docker/pulls/hoffmansweb/bookarr?style=flat-square" alt="Docker Pulls"></a>
+    <a href="https://github.com/hoffmansweb/bookarr/blob/master/LICENSE"><img src="https://img.shields.io/github/license/hoffmansweb/bookarr?style=flat-square" alt="License"></a>
   </p>
 </div>
 
@@ -42,7 +42,7 @@ version: '3.8'
 
 services:
   bookarr:
-    image: ghcr.io/YourUsername/bookarr:latest
+    image: ghcr.io/hoffmansweb/bookarr:latest
     container_name: bookarr
     restart: unless-stopped
     ports:
@@ -82,8 +82,8 @@ Bookarr will be accessible at `http://localhost:5000`.
 
 ## 🤝 Getting Help & Support
 
-- **Found a bug?** Open an [Issue](https://github.com/YourUsername/Bookarr/issues) on GitHub.
-- **Have a feature request?** Start a discussion in the [Discussions](https://github.com/YourUsername/Bookarr/discussions) tab.
+- **Found a bug?** Open an [Issue](https://github.com/hoffmansweb/bookarr/issues) on GitHub.
+- **Have a feature request?** Start a discussion in the [Discussions](https://github.com/hoffmansweb/bookarr/discussions) tab.
 - **Discord:** Join our community on Discord (Coming Soon!) to chat about setups and feature ideas.
 
 ## 🛠️ Contributing
