@@ -31,6 +31,7 @@ router.get('/:id', bookController.getById);
 router.post('/:id/fetch-metadata', bookController.fetchMetadata);
 router.post('/', bookController.create);
 router.post('/grab', bookController.grab);
+router.post('/add-series', bookController.addSeries);
 router.put('/:id', bookController.update);
 // Books are shared across all users; deleting one removes it for everyone
 router.delete('/:id', adminAuth, bookController.delete);

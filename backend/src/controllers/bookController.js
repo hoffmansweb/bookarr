@@ -38,7 +38,24 @@ exports.getAll = async (req, res) => {
     if (monitored !== undefined) where.monitored = monitored === 'true';
     if (mediaType) where.mediaType = mediaType;
     if (search) {
-      where.title = { [Op.like]: `%${search}%` };
+      // Search the local catalogue only: title, author name, ISBNs and series. The
+      // author-name match is resolved to author ids first (like the Authors page does
+      // for book titles) so the `author` include below is never filtered by the query.
+      const like = `%${search}%`;
+      const or = [
+        { title: { [Op.like]: like } },
+        { isbn10: { [Op.like]: like } },
+        { isbn13: { [Op.like]: like } },
+        { series: { [Op.like]: like } }
+      ];
+      const authorsMatching = await Author.findAll({
+        attributes: ['id'],
+        where: { name: { [Op.like]: like } },
+        raw: true
+      });
+      const authorIds = authorsMatching.map((author) => author.id);
+      if (authorIds.length) or.push({ authorId: { [Op.in]: authorIds } });
+      where[Op.or] = or;
     }
 
     const books = await Book.findAll({
@@ -108,6 +125,41 @@ exports.grab = async (req, res) => {
     const { formats, ...bookData } = req.body || {};
     const result = await grab(bookData, { userId: req.user?.id, formats });
     res.status(201).json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message });
+  }
+};
+
+// Add every book in a series: re-search for the series name, keep the results that
+// actually name it, and grab each one (grab() reuses existing entries, so this is idempotent).
+exports.addSeries = async (req, res) => {
+  try {
+    const { series, author } = req.body || {};
+    const name = String(series || '').trim();
+    if (!name) return res.status(400).json({ error: 'Series name is required' });
+
+    const query = author ? `${name} ${author}` : name;
+    const results = await aggregator.searchAllSources(query);
+
+    const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const target = norm(name);
+    const inSeries = results.filter((b) => b.series && norm(b.series) === target);
+    // A series search can return standalone hits too; prefer the books that name the series,
+    // but fall back to every result when none do (e.g. a series with no scraped name).
+    const pool = inSeries.length ? inSeries : results;
+
+    const { grab } = require('../services/bookGrabber');
+    const added = [];
+    const seen = new Set();
+    for (const book of pool) {
+      const key = norm(book.title);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const { books } = await grab(book, { userId: req.user?.id });
+      added.push(...books);
+    }
+
+    res.status(201).json({ added: added.length, books: added });
   } catch (error) {
     res.status(error.status || 500).json({ error: error.message });
   }

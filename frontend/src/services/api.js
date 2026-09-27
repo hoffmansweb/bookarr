@@ -53,6 +53,8 @@ export const bookAPI = {
   create: (data) => api.post('/books', data),
   // Add a search result and immediately start looking for it (formats from the auto_get_formats setting)
   grab: (book) => api.post('/books/grab', book),
+  // Add every book in a series (adds + starts acquiring each one)
+  addSeries: (series, author) => api.post('/books/add-series', { series, author }),
   update: (id, data) => api.put(`/books/${id}`, data),
   delete: (id) => api.delete(`/books/${id}`),
   addToLibrary: (id) => api.post(`/books/${id}/library`),

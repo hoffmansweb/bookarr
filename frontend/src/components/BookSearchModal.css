@@ -1,0 +1,95 @@
+.book-search-modal {
+  max-width: 900px;
+  width: 90vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-search-modal .modal-header {
+  flex: 0 0 auto;
+  padding-right: 60px; /* leave room for the absolute × */
+}
+
+.book-search-form {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 16px 30px;
+  border-bottom: 1px solid #38444d;
+}
+
+.book-search-form input {
+  flex: 1;
+}
+
+.book-search-form button {
+  white-space: nowrap;
+}
+
+.book-search-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 30px;
+}
+
+.loading-inline {
+  color: #8b98a5;
+  text-align: center;
+  padding: 40px 0;
+  font-size: 1rem;
+}
+
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: center;
+}
+
+.result-actions .add-btn {
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.result-actions .series-btn {
+  background: #192734;
+  color: #1d9bf0;
+  border: 1px solid #1d9bf0;
+  padding: 8px 24px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.result-actions .series-btn:hover:not(:disabled) {
+  background: #1d9bf0;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .book-search-modal {
+    width: 100%;
+    max-width: none;
+  }
+
+  .book-search-form {
+    padding: 12px 15px;
+  }
+
+  .book-search-body {
+    padding: 12px 15px;
+  }
+
+  .result-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .result-actions .add-btn,
+  .result-actions .series-btn {
+    flex: 1;
+    min-height: 44px;
+    white-space: normal;
+  }
+}

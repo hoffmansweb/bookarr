@@ -6,21 +6,25 @@ import BookModal from '../components/BookModal';
 import AuthorModal from '../components/AuthorModal';
 import { authorAPI } from '../services/api';
 import SearchBar from '../components/SearchBar';
+import BookSearchModal from '../components/BookSearchModal';
 import './Books.css';
 
 const Books = () => {
   const [books, setBooks] = useState([]);
   const [filter, setFilter] = useState('all');
   const [mediaFilter, setMediaFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState(null);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [selectedBooks, setSelectedBooks] = useState([]);
   const [bulkMode, setBulkMode] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     loadBooks();
-  }, [filter, mediaFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, mediaFilter, searchQuery]);
 
   const handleAuthorClick = async (author) => {
     if (author?.id) {
@@ -42,6 +46,7 @@ const Books = () => {
       const params = {};
       if (filter !== 'all') params.status = filter;
       if (mediaFilter !== 'all') params.mediaType = mediaFilter;
+      if (searchQuery.trim()) params.search = searchQuery.trim();
       const { data } = await bookAPI.getAll(params);
       setBooks(data.sort((a, b) => a.title.localeCompare(b.title)));
     } catch (error) {
@@ -51,17 +56,10 @@ const Books = () => {
     }
   };
 
-  const handleSearch = async (query) => {
-    if (!query) {
-      loadBooks();
-      return;
-    }
-    try {
-      const { data } = await bookAPI.search(query);
-      setBooks(data);
-    } catch (error) {
-      console.error('Search failed:', error);
-    }
+  // Filter the local catalogue (not the online aggregator): searching on the Books
+  // page finds only books already in the app. Online lookup is per-book (BookModal).
+  const handleSearch = (query) => {
+    setSearchQuery(query || '');
   };
 
   const toggleBookSelection = (bookId) => {
@@ -91,6 +89,7 @@ const Books = () => {
         <h1>Books</h1>
         <div className="header-actions">
           <SearchBar onSearch={handleSearch} placeholder="Search books..." />
+          <button onClick={() => setShowAddModal(true)}>+ Add Book</button>
           <button onClick={() => setBulkMode(!bulkMode)}>
             {bulkMode ? 'Cancel' : 'Bulk Edit'}
           </button>
@@ -127,6 +126,12 @@ const Books = () => {
           <button className={filter === 'completed' ? 'active' : ''} onClick={() => setFilter('completed')}>Completed</button>
         </div>
       </div>
+
+      {searchQuery.trim() && !loading && books.length > 0 && (
+        <p className="search-summary" role="status">
+          {`${books.length} ${books.length === 1 ? 'book' : 'books'} matching "${searchQuery}"`}
+        </p>
+      )}
 
       {loading ? (
         <div className="loading">Loading...</div>
@@ -165,6 +170,12 @@ const Books = () => {
           author={selectedAuthor}
           onClose={() => setSelectedAuthor(null)}
           onUpdate={loadBooks}
+        />
+      )}
+      {showAddModal && (
+        <BookSearchModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={loadBooks}
         />
       )}
     </div>
