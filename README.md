@@ -14,6 +14,11 @@
 
 ---
 
+> [!WARNING]
+> 🤖 **VIBE CODED DISCLAIMER:** This entire application (both frontend and backend) was 100% "vibe coded" and generated using AI. While it is fully functional and awesome, please keep in mind that the codebase was assembled by an AI assistant!
+
+---
+
 **Bookarr** is an automated Ebook and Audiobook manager, designed specifically for self-hosters and readers who want to own their libraries. Built with a sleek, responsive React interface and a powerful Node.js backend, Bookarr handles everything from tracking author releases to synthesizing audiobooks on the fly!
 
 ## ✨ Features
