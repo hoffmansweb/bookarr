@@ -10,7 +10,10 @@ const SystemStatus = ({ embedded = false }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
-  const [latestRelease, setLatestRelease] = useState(null);
+  // Settings -> System -> Updates. The answer comes from the Bookarr API (see the update section
+  // in controllers/systemController.js): a browser call to api.github.com logged a 404 in the
+  // console whenever the repository had no published release, and the page could not say why.
+  const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   // Backup & Restore: a restore uploads as long as it takes, and a refusal has to stay on screen.
   // A toast is gone in five seconds, which is exactly why "400 Bad Request" told the user nothing.
@@ -18,25 +21,28 @@ const SystemStatus = ({ embedded = false }) => {
   const [restoreError, setRestoreError] = useState('');
   const [restoreWarnings, setRestoreWarnings] = useState([]);
 
-  const checkForUpdates = async () => {
+  const checkForUpdates = async (force = false) => {
     setCheckingUpdate(true);
     try {
-      const res = await fetch('https://api.github.com/repos/hoffmansweb/bookarr/releases/latest');
-      if (res.ok) {
-        setLatestRelease(await res.json());
-      }
-    } catch (e) {
-      console.error('Failed to check for updates', e);
+      const { data } = await systemAPI.checkUpdates(force);
+      setUpdateInfo(data);
+    } catch (error) {
+      // The endpoint answers 200 with a sentence for every GitHub outcome, so this is Bookarr's own
+      // API being unreachable - worth saying, and still not a console error.
+      setUpdateInfo({
+        checked: false,
+        message: `Could not ask the Bookarr API for the release list (${error.response?.data?.error || error.message}). Check the container log if this keeps happening.`
+      });
     } finally {
       setCheckingUpdate(false);
     }
   };
 
+  // Ask once when the tab is first opened; the button forces a fresh answer past the 5 minute cache.
   useEffect(() => {
-    if (activeSubTab === 'updates' && !latestRelease) {
-      checkForUpdates();
-    }
-  }, [activeSubTab, latestRelease]);
+    if (activeSubTab === 'updates' && !updateInfo) checkForUpdates(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSubTab]);
 
 
   useEffect(() => {
@@ -347,7 +353,7 @@ const SystemStatus = ({ embedded = false }) => {
               <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3>System Updates</h3>
-                  <button className="s-btn" onClick={checkForUpdates} disabled={checkingUpdate}>
+                  <button className="s-btn" onClick={() => checkForUpdates(true)} disabled={checkingUpdate}>
                     {checkingUpdate ? 'Checking...' : 'Check for Updates'}
                   </button>
                 </div>
@@ -355,29 +361,45 @@ const SystemStatus = ({ embedded = false }) => {
                 <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                   <p style={{ margin: '0 0 10px 0', color: '#ccc' }}><strong>Current Version:</strong> {statusData?.system?.version || 'Unknown'}</p>
                   
-                  {latestRelease ? (
+                  {updateInfo ? (
                     <div>
-                      <p style={{ margin: '0 0 15px 0', color: latestRelease.tag_name !== statusData?.system?.version ? '#4caf50' : '#ccc' }}>
-                        <strong>Latest Version:</strong> {latestRelease.tag_name}
-                      </p>
-                      
-                      {latestRelease.tag_name !== statusData?.system?.version ? (
-                        <div style={{ padding: '15px', border: '1px solid #4caf50', borderRadius: '8px', backgroundColor: 'rgba(76, 175, 80, 0.1)' }}>
-                          <h4 style={{ margin: '0 0 10px 0', color: '#4caf50' }}>🎉 Update Available!</h4>
-                          <p style={{ margin: '0 0 15px 0', fontSize: '0.9em', lineHeight: '1.4' }}>
-                            <strong>Docker Users:</strong> Because you are running inside an isolated container, Bookarr cannot overwrite itself. Simply use Watchtower for automatic updates, or manually run <code>docker pull ghcr.io/hoffmansweb/bookarr:latest</code> and restart your container.<br/><br/>
-                            <strong>Windows Users:</strong> Download the latest installer from the release page below.
+                      {updateInfo.published && updateInfo.latest ? (
+                        <>
+                          <p style={{ margin: '0 0 15px 0', color: updateInfo.updateAvailable ? '#4caf50' : '#ccc' }}>
+                            <strong>Latest release:</strong> {updateInfo.latest.tag || updateInfo.latest.version}
+                            {updateInfo.latest.publishedAt ? ` — published ${new Date(updateInfo.latest.publishedAt).toLocaleDateString()}` : ''}
+                            {updateInfo.latest.prerelease ? ' (prerelease)' : ''}
                           </p>
-                          <a href={latestRelease.html_url} target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                            View Release Notes
-                          </a>
-                        </div>
+
+                          {updateInfo.updateAvailable ? (
+                            <div style={{ padding: '15px', border: '1px solid #4caf50', borderRadius: '8px', backgroundColor: 'rgba(76, 175, 80, 0.1)' }}>
+                              <h4 style={{ margin: '0 0 10px 0', color: '#4caf50' }}>🎉 Update Available!</h4>
+                              <p style={{ margin: '0 0 15px 0', fontSize: '0.9em', lineHeight: '1.4' }}>
+                                <strong>Docker Users:</strong> Because you are running inside an isolated container, Bookarr cannot overwrite itself. Simply use Watchtower for automatic updates, or manually run <code>docker pull ghcr.io/hoffmansweb/bookarr:latest</code> and restart your container.<br/><br/>
+                                <strong>Windows Users:</strong> Download the latest installer from the release page below.
+                              </p>
+                              <a href={updateInfo.latest.url} target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
+                                View Release Notes
+                              </a>
+                            </div>
+                          ) : updateInfo.updateAvailable === false ? (
+                            <p style={{ margin: 0, color: '#4caf50' }}>✅ You are running the latest version of Bookarr!</p>
+                          ) : (
+                            <p className="update-note">{updateInfo.message}</p>
+                          )}
+                        </>
                       ) : (
-                        <p style={{ margin: 0, color: '#4caf50' }}>✅ You are running the latest version of Bookarr!</p>
+                        <p className={updateInfo.checked ? 'update-note' : 'update-note update-note-warn'}>{updateInfo.message}</p>
                       )}
+
+                      <p className="update-meta">
+                        <a href={updateInfo.releasesUrl} target="_blank" rel="noopener noreferrer">All releases on GitHub</a>
+                        {updateInfo.checkedAt ? ` — checked ${new Date(updateInfo.checkedAt).toLocaleTimeString()}` : ''}
+                        {updateInfo.cached ? ' (from the 5 minute cache — the button asks again)' : ''}
+                      </p>
                     </div>
                   ) : (
-                    <p style={{ margin: 0, color: '#888' }}>{checkingUpdate ? 'Connecting to GitHub...' : 'Could not fetch update data.'}</p>
+                    <p style={{ margin: 0, color: '#888' }}>{checkingUpdate ? 'Asking GitHub...' : 'Press "Check for Updates" to ask GitHub for the newest release.'}</p>
                   )}
                 </div>
               </div>

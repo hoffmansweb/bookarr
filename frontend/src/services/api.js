@@ -188,6 +188,10 @@ export const calendarAPI = {
 export const systemAPI = {
   getStatus: () => api.get('/system/status'),
   getLogs: () => api.get('/system/logs'),
+  // The backend asks GitHub, not the browser: a repository without a published release answers 404
+  // for /releases/latest (a red error in the console, with the reason hidden behind "Could not fetch
+  // update data"), and the anonymous GitHub limit is 60 requests an hour per IP address.
+  checkUpdates: (force) => api.get('/system/updates', { params: force ? { refresh: 1 } : {}, timeout: 25000 }),
   downloadBackup: () => api.get('/system/backup/download', { responseType: 'blob' }),
   // No Content-Type here on purpose. Only the browser knows the multipart boundary, and it is part of
   // that header: sending 'multipart/form-data' by hand leaves the boundary out, and express-fileupload

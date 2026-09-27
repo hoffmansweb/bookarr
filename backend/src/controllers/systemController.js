@@ -7,6 +7,8 @@ const AdmZip = require('adm-zip');
 const sequelize = require('../config/database');
 const { dataDir, dbPath, backupDir } = require('../config/paths');
 const logger = require('../config/logger');
+const axios = require('axios');
+
 const { getSetting } = require('./settingsController');
 
 // Version reported to the UI (About tab / System status). The Docker build passes
@@ -116,6 +118,170 @@ exports.getStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+// ---------------------------------------------------------------------------------------------
+// Updates (Settings -> System -> Updates)
+//
+// The tab used to call api.github.com from the browser, so a repository without a *published*
+// release left a 404 in the console - GitHub answers 404 for /releases/latest while the only release
+// is a draft, which is exactly the state Release Drafter leaves behind - and the page could say no
+// more than "Could not fetch update data". Asking from here keeps that failure out of the user's
+// console, turns it into a sentence, gets the request off the browser's 60-an-hour anonymous limit,
+// and lets GITHUB_TOKEN raise it to 5000.
+// ---------------------------------------------------------------------------------------------
+const UPDATE_API_BASE = (process.env.BOOKARR_UPDATE_API_BASE || 'https://api.github.com').replace(/\/+$/, '');
+const UPDATE_REPO = process.env.BOOKARR_UPDATE_REPO || 'hoffmansweb/bookarr';
+const UPDATE_PAGE = `https://github.com/${UPDATE_REPO}/releases`;
+const UPDATE_CACHE_MS = 5 * 60 * 1000;
+
+let updateCache = { at: 0, payload: null };
+
+// "1.2.3", "v1.2.3" and "1.2" come back as [1,2,3] / [1,2]. "master" and "develop" come back as null:
+// a branch name is not older or newer than a release, and claiming otherwise is a lie the Updates tab
+// used to tell on every branch build ("v0.1.0" !== "master" is just a string comparison).
+function parseVersion(value) {
+  const match = String(value == null ? '' : value).trim().match(/^v?(\d+(?:\.\d+)*)/i);
+  return match ? match[1].split('.').map(Number) : null;
+}
+
+// true / false when both sides are versions, null when they cannot be ordered.
+function isNewerVersion(candidate, current) {
+  const a = parseVersion(candidate);
+  const b = parseVersion(current);
+  if (!a || !b) return null;
+  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+    const left = a[i] || 0;
+    const right = b[i] || 0;
+    if (left !== right) return left > right;
+  }
+  return false;
+}
+
+function githubHeaders() {
+  const headers = {
+    // GitHub refuses requests without a User-Agent, and asks API clients to identify themselves
+    'User-Agent': `Bookarr/${APP_VERSION}`,
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+  // Optional: a token with public read access. Raises the limit from 60 requests an hour to 5000.
+  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  return headers;
+}
+
+function rateLimitMessage(headers) {
+  const reset = Number(headers && headers['x-ratelimit-reset']);
+  const when = reset ? new Date(reset * 1000).toLocaleTimeString() : null;
+  return `GitHub is rate-limiting the check (60 requests an hour without a token${when ? `; the window resets at ${when}` : ''}). A GITHUB_TOKEN in the container environment raises that to 5000.`;
+}
+
+const releasePayload = (release) => ({
+  version: String(release.tag_name || release.name || '').replace(/^v/i, ''),
+  tag: release.tag_name || null,
+  name: release.name || release.tag_name || null,
+  url: release.html_url || UPDATE_PAGE,
+  publishedAt: release.published_at || null,
+  prerelease: Boolean(release.prerelease),
+  notes: (release.body || '').slice(0, 4000)
+});
+
+
+
+// GET /api/system/updates - the newest release GitHub has published, or the sentence explaining why
+// there is nothing to compare with. Always 200: `message` is what the UI shows, so "no releases
+// published yet" never arrives in the browser as a failed request. `?refresh=1` skips the cache.
+exports.checkForUpdates = async (req, res) => {
+  const refresh = Boolean(req.query && req.query.refresh);
+  if (!refresh && updateCache.payload && Date.now() - updateCache.at < UPDATE_CACHE_MS) {
+    return res.json({ ...updateCache.payload, cached: true });
+  }
+
+  const answer = {
+    current: APP_VERSION,
+    canCompare: Boolean(parseVersion(APP_VERSION)),
+    checked: false, // true once GitHub answered, even if the answer was 404 or a rate limit
+    published: false,
+    updateAvailable: null,
+    latest: null,
+    releasesUrl: UPDATE_PAGE,
+    message: '',
+    checkedAt: new Date().toISOString()
+  };
+
+  try {
+    const latest = await axios.get(`${UPDATE_API_BASE}/repos/${UPDATE_REPO}/releases/latest`, {
+      headers: githubHeaders(),
+      timeout: 15000,
+      // 404 means "nothing published yet" here, which is a normal answer rather than an exception
+      validateStatus: () => true
+    });
+
+    answer.checked = true;
+    if (latest.status === 200 && latest.data) {
+      answer.published = true;
+      answer.latest = releasePayload(latest.data);
+      answer.updateAvailable = isNewerVersion(answer.latest.version, APP_VERSION);
+      if (answer.updateAvailable === null) {
+        answer.message = `This build reports its version as "${APP_VERSION}" (a branch or source build), so it cannot be ordered against release ${answer.latest.tag}. Compare the dates below, or run the ghcr.io image tagged "latest".`;
+      } else if (answer.updateAvailable) {
+        answer.message = `Bookarr ${answer.latest.tag} is available; you are running ${APP_VERSION}.`;
+      } else {
+        answer.message = `Bookarr ${answer.latest.tag} is the newest release and you are running ${APP_VERSION}.`;
+      }
+      logger.info(`Update check: newest release ${answer.latest.tag}, running ${APP_VERSION}, update available: ${answer.updateAvailable}`);
+      updateCache = { at: Date.now(), payload: answer };
+      return res.json(answer);
+    }
+
+    if (latest.status === 404) {
+      // Drafts are invisible to this endpoint, and to an anonymous caller in the list as well, so an
+      // empty list means the workflow has drafted a release that nobody published yet.
+      const list = await axios.get(`${UPDATE_API_BASE}/repos/${UPDATE_REPO}/releases`, {
+        headers: githubHeaders(),
+        params: { per_page: 5 },
+        timeout: 15000,
+        validateStatus: () => true
+      });
+      const releases = Array.isArray(list.data) ? list.data : [];
+      const newest = releases.find((entry) => !entry.draft);
+
+      if (newest) {
+        // Only reachable when the newest published release is a prerelease: /releases/latest skips those
+        answer.published = true;
+        answer.latest = releasePayload(newest);
+        answer.updateAvailable = isNewerVersion(answer.latest.version, APP_VERSION);
+        answer.message = `The newest published release is ${answer.latest.tag}, and it is marked as a prerelease (which /releases/latest skips). Updates are judged against the newest stable release.`;
+        logger.info(`Update check: newest published release ${answer.latest.tag} is a prerelease`);
+        updateCache = { at: Date.now(), payload: answer };
+        return res.json(answer);
+      }
+
+      answer.message = `No Bookarr release has been published yet, so there is nothing to compare with. The release workflow drafts them and a person publishes them ("gh release edit <tag> --draft=false") - until then every entry on the releases page is a draft, and GitHub answers 404 for "the latest release".`;
+      logger.info('Update check: no published release yet (drafts do not count for /releases/latest)');
+      updateCache = { at: Date.now(), payload: answer };
+      return res.json(answer);
+    }
+
+    if (latest.status === 403 || latest.status === 429) {
+      answer.message = rateLimitMessage(latest.headers);
+      logger.warn(`Update check refused by GitHub (${latest.status}): ${answer.message}`);
+      // A failure is never cached, and it also drops any good answer from earlier: otherwise the tab
+      // would keep showing "up to date" for five minutes while the check is actually being refused.
+      updateCache = { at: 0, payload: null };
+      return res.json(answer);
+    }
+
+    answer.message = `GitHub answered ${latest.status}${latest.statusText ? ` ${latest.statusText}` : ''} for the release list, so Bookarr cannot tell whether there is an update. Try again later, or look at ${UPDATE_PAGE}.`;
+    logger.warn(`Update check: GitHub answered ${latest.status}`);
+    updateCache = { at: Date.now(), payload: answer };
+    return res.json(answer);
+  } catch (error) {
+    // No route to GitHub at all: offline container, DNS, proxy, timeout
+    answer.message = `GitHub could not be reached from the Bookarr server (${error.message}), so Bookarr cannot tell whether there is an update. On an install without internet access this is expected.`;
+    logger.warn(`Update check failed: ${error.message}`);
+    updateCache = { at: 0, payload: null };
+    return res.json(answer);
   }
 };
 

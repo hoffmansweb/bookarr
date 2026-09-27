@@ -219,6 +219,35 @@
   cursor: not-allowed;
 }
 
+/* System Updates */
+.update-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(139, 152, 165, 0.12);
+  border: 1px solid rgba(139, 152, 165, 0.35);
+  color: #c8d1d9;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* GitHub could not be asked at all: a warning, not a red failure - offline installs are fine */
+.update-note-warn {
+  background: rgba(247, 204, 21, 0.1);
+  border-color: rgba(247, 204, 21, 0.35);
+  color: #f7cc15;
+}
+
+.update-meta {
+  margin: 15px 0 0 0;
+  font-size: 0.85rem;
+  color: #8b98a5;
+}
+
+.update-meta a {
+  color: #1d9bf0;
+}
+
 @media (max-width: 768px) {
   .status-grid {
     grid-template-columns: 1fr;

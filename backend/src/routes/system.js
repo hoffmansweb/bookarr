@@ -12,6 +12,10 @@ router.use(adminAuth);
 router.get('/status', systemController.getStatus);
 router.get('/logs', systemController.getLogs);
 
+// GitHub's newest published release. Server-side so the browser never sees GitHub's 404 (only
+// drafts published) and the request is not counted against the browser's anonymous rate limit.
+router.get('/updates', systemController.checkForUpdates);
+
 router.get('/backup/download', systemController.downloadBackup);
 router.post('/backup/restore', systemController.restoreBackup);
 

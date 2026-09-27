@@ -406,6 +406,36 @@ Two things worth knowing:
   everybody out. Restart the container to load a restored `.env` or session secret.
 
 
+#### Problem: the Updates tab says `Could not fetch update data` and the browser console shows a 404 from `api.github.com`
+
+That 404 is not an outage. GitHub answers
+`https://api.github.com/repos/hoffmansweb/bookarr/releases/latest` from **published** releases only, and
+the repository's release workflow (Release Drafter) leaves every release as a **draft** until a person
+publishes it. With drafts only, that endpoint answers 404 — the same answer a private or renamed
+repository gives, which is why the interface could only say "Could not fetch update data".
+
+The interface no longer calls GitHub from the browser. It asks the backend
+(`GET /api/system/updates`), which always answers 200 and puts the explanation in `message`:
+
+| What the tab shows | What it means | What to do |
+| --- | --- | --- |
+| `No Bookarr release has been published yet…` | GitHub has drafts only, so there is nothing to compare with | publish one: `gh release edit <tag> --draft=false` (a `v*` tag also builds a Docker image) |
+| `This build reports its version as "master"…` | the image was built from a branch, and `BOOKARR_VERSION` is that branch name, so no release counts as newer | compare against `ghcr.io/hoffmansweb/bookarr:latest`; a tag build reports the tag itself |
+| `GitHub is rate-limiting the check…` | 60 requests an hour per IP address for anonymous callers | set `GITHUB_TOKEN` in the container environment (5000 an hour), or press the button again later |
+| `GitHub could not be reached from the Bookarr server…` | no route to GitHub: offline install, DNS, proxy, TLS | expected on an offline install — nothing to fix |
+| `Bookarr vX is available…` | a newer published release exists | `docker compose pull && docker compose up -d` (or Watchtower) |
+
+Ask for the raw answer yourself:
+
+```bash
+curl -H "Authorization: Bearer <token>" "http://192.168.1.75:5057/api/system/updates?refresh=1"
+```
+
+Answers are cached for five minutes; `?refresh=1` (what the *Check for Updates* button sends) skips the
+cache, and a failed check is never cached, so the next attempt talks to GitHub again. The container log
+records every outcome: `docker compose logs --tail=50 bookarr | grep -i "update check"`.
+
+
 ### Scraper & Source Issues
 
 #### Problem: log says `FlareSolverr failed (getaddrinfo ENOTFOUND flaresolverr)` or `FlareSolverr returned a challenge page`
