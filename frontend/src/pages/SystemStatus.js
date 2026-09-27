@@ -10,6 +10,29 @@ const SystemStatus = ({ embedded = false }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [latestRelease, setLatestRelease] = useState(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const checkForUpdates = async () => {
+    setCheckingUpdate(true);
+    try {
+      const res = await fetch('https://api.github.com/repos/hoffmansweb/bookarr/releases/latest');
+      if (res.ok) {
+        setLatestRelease(await res.json());
+      }
+    } catch (e) {
+      console.error('Failed to check for updates', e);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === 'updates' && !latestRelease) {
+      checkForUpdates();
+    }
+  }, [activeSubTab, latestRelease]);
+
 
   useEffect(() => {
     fetchStatus();
@@ -241,6 +264,49 @@ const SystemStatus = ({ embedded = false }) => {
           )}
 
           
+          
+          {activeSubTab === 'updates' && (
+            <div className="status-grid">
+              <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3>System Updates</h3>
+                  <button className="s-btn" onClick={checkForUpdates} disabled={checkingUpdate}>
+                    {checkingUpdate ? 'Checking...' : 'Check for Updates'}
+                  </button>
+                </div>
+                
+                <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                  <p style={{ margin: '0 0 10px 0', color: '#ccc' }}><strong>Current Version:</strong> {statusData?.system?.version || 'Unknown'}</p>
+                  
+                  {latestRelease ? (
+                    <div>
+                      <p style={{ margin: '0 0 15px 0', color: latestRelease.tag_name !== statusData?.system?.version ? '#4caf50' : '#ccc' }}>
+                        <strong>Latest Version:</strong> {latestRelease.tag_name}
+                      </p>
+                      
+                      {latestRelease.tag_name !== statusData?.system?.version ? (
+                        <div style={{ padding: '15px', border: '1px solid #4caf50', borderRadius: '8px', backgroundColor: 'rgba(76, 175, 80, 0.1)' }}>
+                          <h4 style={{ margin: '0 0 10px 0', color: '#4caf50' }}>🎉 Update Available!</h4>
+                          <p style={{ margin: '0 0 15px 0', fontSize: '0.9em', lineHeight: '1.4' }}>
+                            <strong>Docker Users:</strong> Because you are running inside an isolated container, Bookarr cannot overwrite itself. Simply use Watchtower for automatic updates, or manually run <code>docker pull ghcr.io/hoffmansweb/bookarr:latest</code> and restart your container.<br/><br/>
+                            <strong>Windows Users:</strong> Download the latest installer from the release page below.
+                          </p>
+                          <a href={latestRelease.html_url} target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
+                            View Release Notes
+                          </a>
+                        </div>
+                      ) : (
+                        <p style={{ margin: 0, color: '#4caf50' }}>✅ You are running the latest version of Bookarr!</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, color: '#888' }}>{checkingUpdate ? 'Connecting to GitHub...' : 'Could not fetch update data.'}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeSubTab === 'backup' && (
             <div className="status-grid">
               <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
