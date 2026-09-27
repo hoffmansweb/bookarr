@@ -29,8 +29,7 @@ COPY backend/package*.json ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     YOUTUBE_DL_SKIP_DOWNLOAD=true
-# --legacy-peer-deps: 
-pm install on a dev machine (npm 11) can rewrite the lock in a way that
+# --legacy-peer-deps: npm install on a dev machine (npm 11) can rewrite the lock in a way that
 # npm 10 in this image refuses - it tries to satisfy an optional peer dep the lock does not list.
 RUN npm ci --omit=dev --omit=optional --legacy-peer-deps --no-audit --no-fund
 
