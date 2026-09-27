@@ -12,6 +12,11 @@ const SystemStatus = ({ embedded = false }) => {
   const [logsLoading, setLogsLoading] = useState(false);
   const [latestRelease, setLatestRelease] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  // Backup & Restore: a restore uploads as long as it takes, and a refusal has to stay on screen.
+  // A toast is gone in five seconds, which is exactly why "400 Bad Request" told the user nothing.
+  const [restoring, setRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState('');
+  const [restoreWarnings, setRestoreWarnings] = useState([]);
 
   const checkForUpdates = async () => {
     setCheckingUpdate(true);
@@ -82,29 +87,63 @@ const SystemStatus = ({ embedded = false }) => {
     }
   };
 
+  // A restore takes one file, and a .zip bundle or a raw .sqlite are the only two shapes Bookarr
+  // writes. Both are checked here as well, so the wrong file is explained before a long upload.
+  const BACKUP_NAME = /\.(zip|sqlite3?|db)$/i;
+
+  const restoreFailed = (message, err) => {
+    setRestoreError(message);
+    toast.error(message);
+    if (err) console.error('Backup restore failed:', err.response?.data || err.message);
+  };
+
   const handleImport = async (e) => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
-    
-    if (window.confirm('Restore this backup? The database is replaced with the file, a copy of the current one is saved to the backups folder first, and any .env / JWT secret in the archive is restored too (the file it replaces is kept with a .backup- date suffix). Everyone is signed out.')) {
-      try {
-        const formData = new FormData();
-        formData.append('dbFile', file);
-        
-        toast.info('Uploading and restoring backup...');
-        const { data } = await systemAPI.restoreBackup(formData);
-        
-        const alsoRestored = data?.configFiles?.length ? ` + ${data.configFiles.join(', ')}` : '';
-        toast.success(data?.safetySnapshot ? `Restore complete: database${alsoRestored} (previous database kept as ${data.safetySnapshot})` : 'Restore complete.');
-        if (data?.configFiles?.length) toast.info('Restart Bookarr to load the restored .env / JWT secret.');
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 3000);
-      } catch (err) {
-        toast.error(`Import failed — ${err.response?.data?.error || 'is this a valid Bookarr backup (.zip or .sqlite)?'}`);
-        console.error(err);
-      }
+
+    setRestoreError('');
+    setRestoreWarnings([]);
+
+    if (!BACKUP_NAME.test(file.name)) {
+      restoreFailed(`Bookarr restores a .zip or .sqlite backup - "${file.name}" is neither. (A .gz, .tar, .sql or .7z archive cannot be read here.)`);
+      return;
+    }
+    if (!file.size) {
+      restoreFailed(`"${file.name}" is 0 bytes, so the download or the copy failed. Download the backup again and retry.`);
+      return;
+    }
+
+    const confirmed = window.confirm(`Restore ${file.name} (${formatBytes(file.size)})? The database is replaced with the file, a copy of the current one is saved to the backups folder first, and any .env / JWT secret in the archive is restored too (the file it replaces is kept with a .backup- date suffix). Everyone is signed out.`);
+    if (!confirmed) return;
+
+    setRestoring(true);
+    try {
+      const formData = new FormData();
+      formData.append('dbFile', file);
+
+      toast.info(`Uploading ${file.name} and restoring...`);
+      const { data } = await systemAPI.restoreBackup(formData);
+
+      const alsoRestored = data?.configFiles?.length ? ` + ${data.configFiles.join(', ')}` : '';
+      toast.success(data?.safetySnapshot ? `Restore complete: database${alsoRestored} (previous database kept as ${data.safetySnapshot})` : 'Restore complete.');
+      if (data?.configFiles?.length) toast.info('Restart Bookarr to load the restored .env / JWT secret.');
+      if (data?.warnings?.length) setRestoreWarnings(data.warnings);
+
+      // The restored database has different users once file-level config was restored, so signing in
+      // again is the honest next step.
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, data?.warnings?.length ? 8000 : 3000);
+    } catch (err) {
+      // The API answers { error } for a refused file; the upload layer answers plain text (413).
+      const detail = typeof err.response?.data === 'string' ? err.response.data.trim() : err.response?.data?.error;
+      const fallback = err.response
+        ? `the server refused the upload (HTTP ${err.response.status})`
+        : 'cannot reach the Bookarr server';
+      restoreFailed(`Import failed - ${detail || fallback}`, err);
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -350,13 +389,15 @@ const SystemStatus = ({ embedded = false }) => {
               <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
                 <h3>Backup & Restore</h3>
                 <p style={{ color: '#ccc', marginBottom: '20px' }}>Download everything Bookarr keeps: the database (settings, users, books, reading and listening progress, notifications, indexers, download clients) and, when your install has them, your .env and the JWT session secret. Passwords live in the database as bcrypt hashes, never in plain text. A restore swaps the database back in, restores those config files too (the files they replace are renamed with a .backup- date suffix) and saves a copy of the current database first, so a mistake is reversible. Your ebook and audiobook files are not in the archive - the database only holds their paths - so back up the library folders themselves as well. The archive contains credentials, so keep it somewhere safe.</p>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button type="button" className="refresh-btn" onClick={handleExport}>⬇️ Download backup</button>
-                  <label className="refresh-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    ⬆️ Restore backup
-                    <input type="file" accept=".zip,.sqlite,.sqlite3,.db,application/zip,application/x-sqlite3" onChange={handleImport} style={{ display: 'none' }} />
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button type="button" className="refresh-btn" onClick={handleExport} disabled={restoring}>⬇️ Download backup</button>
+                  <label className="refresh-btn" style={{ cursor: restoring ? 'progress' : 'pointer', display: 'flex', alignItems: 'center', opacity: restoring ? 0.7 : 1 }}>
+                    {restoring ? '⏳ Restoring…' : '⬆️ Restore backup'}
+                    <input type="file" accept=".zip,.sqlite,.sqlite3,.db,application/zip,application/x-sqlite3" onChange={handleImport} disabled={restoring} style={{ display: 'none' }} />
                   </label>
                 </div>
+                {restoreError && <div className="restore-error">{restoreError}</div>}
+                {restoreWarnings.map((warning) => <div className="restore-warning" key={warning}>{warning}</div>)}
               </div>
             </div>
           )}

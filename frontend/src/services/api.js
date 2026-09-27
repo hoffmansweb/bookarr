@@ -189,7 +189,10 @@ export const systemAPI = {
   getStatus: () => api.get('/system/status'),
   getLogs: () => api.get('/system/logs'),
   downloadBackup: () => api.get('/system/backup/download', { responseType: 'blob' }),
-  restoreBackup: (formData) => api.post('/system/backup/restore', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  // No Content-Type here on purpose. Only the browser knows the multipart boundary, and it is part of
+  // that header: sending 'multipart/form-data' by hand leaves the boundary out, and express-fileupload
+  // then ignores the whole request (the API only sees "no file" and answers 400).
+  restoreBackup: (formData) => api.post('/system/backup/restore', formData)
 };
 
 export default api;

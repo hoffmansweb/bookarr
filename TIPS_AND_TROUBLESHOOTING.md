@@ -366,6 +366,46 @@ node -e "require('dotenv').config();require('./src/migrations/fixUserBooksUnique
 Copy `database.sqlite` to `backend/backups/` first — the migration rewrites the table (it keeps
 every row, but a backup makes rollbacks trivial).
 
+#### Problem: restoring a backup answers `400 Bad Request`
+
+The interface (Settings → System → Backup & Restore → *Restore backup*) now prints the reason under the
+two buttons instead of only toasting it, and the same sentence goes to the log:
+
+```bash
+docker compose logs --tail=100 bookarr | findstr /i "restore"   # Windows
+docker compose logs --tail=100 bookarr | grep -i restore        # Linux / macOS
+```
+
+Posting the file yourself shows the exact reason too:
+
+```bash
+curl -H "Authorization: Bearer <token>" -F "dbFile=@bookarr-backup-2026-09-27.zip" \
+  http://192.168.1.75:5057/api/system/backup/restore
+```
+
+| Message | What it means | What to do |
+| --- | --- | --- |
+| `No backup file arrived: the request body was sent as "application/json"` | the file was not posted as a form | use the card, or `curl -F dbFile=@…` |
+| `No backup file arrived: … multipart/form-data with no boundary` | the client set `Content-Type: multipart/form-data` itself, so the boundary that marks where the file starts was missing and the upload was dropped | reload the page (an old cached interface did this) and retry |
+| `"file" arrived empty (0 bytes)` | the download or the copy never finished | download the backup again |
+| `That file is neither a SQLite database nor a readable .zip archive` | not a Bookarr backup — `.gz`, `.tar`, `.sql`, `.7z` and folders of books cannot be read here | upload the `.zip` Bookarr wrote, or a `database.sqlite` |
+| `The archive contains no .sqlite database` | a zip, but nothing database-shaped inside | check you picked the Bookarr backup, not a zip of the library |
+| `The database inside this archive does not match the checksum its own metadata.json recorded` | the database was edited, re-packed or damaged after the backup was written | unzip it and upload the `database.sqlite` inside — a raw `.sqlite` is checked on its own and skips this comparison |
+| `This file is not a Bookarr database: it has no Users table` | a valid SQLite file, but from something else (restoring it would leave Bookarr with no accounts) | pick the Bookarr database |
+| `That file is larger than the 8 GB a single upload accepts` (HTTP 413) | the upload hit the cap | restore next to the container, or copy `database.sqlite` into the volume by hand |
+
+Two things worth knowing:
+
+- An **older Bookarr database is accepted even without a `Books` or `Settings` table**: Bookarr
+  recreates those empty at the next start-up and says so in the response (`warnings`) — check the
+  library after restarting. `Users` is the only table a restore insists on, because otherwise the
+  install would have no accounts left.
+- A restore replaces `database.sqlite` in place, keeps the previous one as
+  `/app/data/backups/database-before-restore-<timestamp>.sqlite`, restores `.env` / `.jwt_secret` when
+  the archive carries them (the files they replace are renamed `*.backup-<timestamp>`), and signs
+  everybody out. Restart the container to load a restored `.env` or session secret.
+
+
 ### Scraper & Source Issues
 
 #### Problem: log says `FlareSolverr failed (getaddrinfo ENOTFOUND flaresolverr)` or `FlareSolverr returned a challenge page`

@@ -191,6 +191,34 @@
   font-size: 1rem;
 }
 
+/* Backup & Restore */
+.restore-error {
+  margin-top: 15px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(244, 33, 46, 0.1);
+  border: 1px solid rgba(244, 33, 46, 0.35);
+  color: #f87171;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.restore-warning {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(247, 204, 21, 0.1);
+  border: 1px solid rgba(247, 204, 21, 0.35);
+  color: #f7cc15;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .status-grid {
     grid-template-columns: 1fr;

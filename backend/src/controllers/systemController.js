@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const AdmZip = require('adm-zip');
 const sequelize = require('../config/database');
 const { dataDir, dbPath, backupDir } = require('../config/paths');
+const logger = require('../config/logger');
 const { getSetting } = require('./settingsController');
 
 // Version reported to the UI (About tab / System status). The Docker build passes
@@ -151,6 +152,8 @@ exports.getLogs = async (req, res) => {
 
 const BACKUP_ZIP_LIMIT = 256 * 1024 * 1024; // larger snapshots are sent as a raw .sqlite
 const SQLITE_MAGIC = 'SQLite format 3\0';
+// Users is the one table a restore cannot invent for itself (no Users table means no accounts at
+// all); Books and Settings are recreated empty by Sequelize on the next start-up, so they only warn.
 const CORE_TABLES = ['Users', 'Books', 'Settings'];
 
 // Config and secret state that lives in the data directory instead of the database: a native
@@ -480,15 +483,64 @@ exports.downloadBackup = async (req, res) => {
   }
 };
 
+// The field name differs between clients: the interface sends "dbFile", older scripts send "backup",
+// and one file in any field is still worth trying. A name that looks like a Bookarr backup wins over
+// a stray extra field.
+function pickUpload(files) {
+  if (!files) return null;
+  const uploaded = [];
+  for (const value of Object.values(files)) {
+    if (Array.isArray(value)) uploaded.push(...value);
+    else if (value) uploaded.push(value);
+  }
+  return uploaded.find((file) => /\.(zip|sqlite3?|db)$/i.test(file.name || '')) || uploaded[0] || null;
+}
+
+// "No file" is not one problem. A body that never arrived as multipart, a multipart header with no
+// boundary (express-fileupload ignores those requests entirely) and an upload that died halfway all
+// reach the controller as "no file", and the browser only shows "400 Bad Request" - so say which it
+// was, and how to get past it.
+function describeMissingUpload(req) {
+  const contentType = String(req.headers?.['content-type'] || '');
+  const announced = Number(req.headers?.['content-length'] || 0);
+
+  if (!contentType.includes('multipart/form-data')) {
+    return `No backup file arrived: the request body was sent as "${contentType || 'an unknown content type'}", but a restore uploads the file as multipart/form-data in a field named "dbFile".`;
+  }
+  if (!/boundary=/i.test(contentType)) {
+    return 'No backup file arrived: the request was multipart/form-data with no boundary, so the server could not tell where the file starts and ends. Reload the page so the current interface is loaded, or upload from a client that sets the header itself, e.g. curl -H "Authorization: Bearer <token>" -F "dbFile=@bookarr-backup.zip" http://<bookarr>/api/system/backup/restore';
+  }
+  return `No backup file arrived: the upload ended after ${announced} bytes. It was refused before it finished - usually because the file is larger than the 8 GB one restore accepts, or the connection dropped. The container log names the reason.`;
+}
+
 // POST /api/system/backup/restore - swap the live database for an uploaded backup
 exports.restoreBackup = async (req, res) => {
-  const upload = req.files && (req.files.dbFile || req.files.backup);
+  // express-fileupload answers some refused uploads on its own (a file over the size limit closes the
+  // connection with 413), so the response must never be written twice.
+  if (res.headersSent) {
+    logger.warn('Backup restore: the upload was refused before it reached the controller');
+    return undefined;
+  }
+
+  const upload = pickUpload(req.files);
   if (!upload) {
-    return res.status(400).json({ error: 'No backup file uploaded (send it as the "dbFile" form field)' });
+    const reason = describeMissingUpload(req);
+    logger.warn(`Backup restore refused: ${reason}`);
+    return res.status(400).json({ error: reason });
   }
 
   const uploadPath = upload.tempFilePath || upload.path;
   const uploadName = upload.name || 'backup';
+  const uploadBytes = Number(upload.size) || (uploadPath && fs.existsSync(uploadPath) ? fs.statSync(uploadPath).size : 0);
+
+  if (!uploadBytes) {
+    removeQuietly(uploadPath);
+    const empty = `"${uploadName}" arrived empty (0 bytes), so there was nothing to restore. Download the backup again and retry.`;
+    logger.warn(`Backup restore refused: ${empty}`);
+    return res.status(400).json({ error: empty });
+  }
+
+  logger.info(`Backup restore started: "${uploadName}" (${uploadBytes} bytes) from ${req.user?.username || req.user?.id || 'an admin'}`);
   const extras = readBundleExtras(uploadPath, uploadName);
   let candidate = null;
   let extracted = false;
@@ -498,14 +550,19 @@ exports.restoreBackup = async (req, res) => {
     extracted = candidate !== uploadPath;
 
     const tables = await inspectDatabase(candidate);
+    if (!('Users' in tables)) {
+      const found = Object.keys(tables).slice(0, 12).join(', ') || 'no tables at all';
+      throw new InvalidBackupError(`This file is not a Bookarr database: it has no Users table, so restoring it would leave the install with no accounts. The database you uploaded contains: ${found}.`);
+    }
     const missing = CORE_TABLES.filter((table) => !(table in tables));
+    const warnings = missing.map((table) => `The uploaded database had no ${table} table, so Bookarr has created an empty one - check your ${table === 'Books' ? 'library' : 'settings'} after restarting.`);
     if (missing.length) {
-      throw new InvalidBackupError(`Not a Bookarr database - the ${missing.join(' / ')} table(s) are missing`);
+      logger.warn(`Backup restore: "${uploadName}" has no ${missing.join(', ')} table - recreated empty`);
     }
 
     // metadata.json carries the sha256 of the snapshot it was written with
     if (extras.expectedSha256 && sha256File(candidate) !== extras.expectedSha256) {
-      throw new InvalidBackupError('The database in this archive does not match the checksum in its metadata.json - the file is damaged, so nothing was restored');
+      throw new InvalidBackupError('The database inside this archive does not match the checksum its own metadata.json recorded, so nothing was restored. That happens when the .zip was re-packed, edited or damaged. Unzip the archive and upload the database.sqlite inside it instead - a raw .sqlite file is checked on its own and skips this comparison.');
     }
 
     // Keep a consistent copy of what we are replacing, so a wrong file is always reversible
@@ -547,15 +604,23 @@ exports.restoreBackup = async (req, res) => {
       restoredFrom: uploadName,
       safetySnapshot: path.basename(safetySnapshot),
       configFiles: replaced,
-      tables: restored
+      tables: restored,
+      warnings
     });
   } catch (error) {
     const rejected = error instanceof InvalidBackupError
       || /not a database|integrity|SQLite file header|missing|invalid|central directory|zipper/i.test(error.message);
-    if (!rejected) console.error('Backup restore error:', error);
+    // A refusal is about the file the user picked, not a bug in Bookarr: log it as a warning with the
+    // reason, so a "400 Bad Request" in the browser can be explained from the container log alone.
+    if (rejected) logger.warn(`Backup restore refused ("${uploadName}"): ${error.message}`);
+    else logger.error(`Backup restore failed ("${uploadName}"):`, error);
+    if (res.headersSent) return undefined;
     return res.status(rejected ? 400 : 500).json({ error: error.message });
   } finally {
     if (extracted && candidate) removeQuietly(candidate);
+    // express-fileupload leaves its own copy of the upload in os.tmpdir(); a backup is a whole
+    // database, so it must not stay in /tmp once the request that needed it is over.
+    if (uploadPath) removeQuietly(uploadPath);
   }
 };
 

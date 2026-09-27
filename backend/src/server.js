@@ -3,6 +3,7 @@ const fileUpload = require('express-fileupload');
 const cors = require('cors');
 const path = require('path');
 const http = require('http');
+const os = require('os');
 const socketIo = require('socket.io');
 require('dotenv').config();
 require('./config/secrets').ensureJwtSecret();
@@ -59,7 +60,23 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use(fileUpload({ useTempFiles: true, tempFileDir: require('os').tmpdir() }));
+// Uploads (cover images, .nzb files, a restored backup) are read into a temporary file instead of
+// RAM, and the options are set for the biggest of them:
+//   - limits.fileSize + abortOnLimit: a file over the cap is refused with HTTP 413 and a sentence.
+//     The default keeps the truncated file, which then fails later as a confusing "not a database".
+//   - uploadTimeout is the idle time between chunks: 5 minutes, so a large backup over WiFi is not
+//     cut off and silently turned into "no file uploaded".
+//   - safeFileNames stays off: the controllers read the real name (.zip vs .sqlite) and .env files.
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: os.tmpdir(),
+  uploadTimeout: 5 * 60 * 1000,
+  abortOnLimit: true,
+  limits: { fileSize: 8 * 1024 * 1024 * 1024 },
+  responseOnLimit: 'That file is larger than the 8 GB a single upload accepts',
+  safeFileNames: false,
+  uriDecodeFileNames: true
+}));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
