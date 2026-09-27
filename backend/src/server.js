@@ -1,4 +1,5 @@
 const express = require('express');
+const fileUpload = require('express-fileupload');
 const cors = require('cors');
 const path = require('path');
 const http = require('http');
@@ -57,6 +58,8 @@ const swaggerOptions = {
 };
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use(fileUpload({ useTempFiles: true, tempFileDir: require('os').tmpdir() }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);

@@ -9,4 +9,7 @@ router.use(adminAuth);
 router.get('/status', systemController.getStatus);
 router.get('/logs', systemController.getLogs);
 
+router.get('/backup/download', systemController.downloadBackup);
+router.post('/backup/restore', systemController.restoreBackup);
+
 module.exports = router;

@@ -187,7 +187,9 @@ export const calendarAPI = {
 
 export const systemAPI = {
   getStatus: () => api.get('/system/status'),
-  getLogs: () => api.get('/system/logs')
+  getLogs: () => api.get('/system/logs'),
+  downloadBackup: () => api.get('/system/backup/download', { responseType: 'blob' }),
+  restoreBackup: (formData) => api.post('/system/backup/restore', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 };
 
 export default api;

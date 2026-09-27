@@ -4,8 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-
-const dataDir = process.env.NODE_ENV === 'production' ? '/app/data' : path.join(__dirname, '..', '..');
+const { dataDir } = require('./paths');
 
 const ensureJwtSecret = () => {
   // Placeholder values from the example env files are publicly known, so treat them as unset

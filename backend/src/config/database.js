@@ -1,10 +1,7 @@
-const { Sequelize } = require('sequelize');
-const path = require('path');
 require('dotenv').config();
 
-const dbPath = process.env.NODE_ENV === 'production'
-  ? '/app/data/database.sqlite'
-  : path.join(__dirname, '..', '..', 'database.sqlite');
+const { Sequelize } = require('sequelize');
+const { dbPath } = require('./paths');
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',

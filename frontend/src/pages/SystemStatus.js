@@ -55,18 +55,30 @@ const SystemStatus = ({ embedded = false }) => {
   };
 
 
+  
   const handleExport = async () => {
     try {
-      const { data } = await settingsAPI.getAll();
-      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const response = await systemAPI.downloadBackup();
+      const url = URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'bookarr-settings.json';
+      
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'bookarr-backup.sqlite';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch && filenameMatch.length === 2) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Settings exported (contains API keys — store it safely)');
+      toast.success('Full backup downloaded');
     } catch (e) {
-      toast.error('Export failed');
+      toast.error('Database export failed');
+      console.error(e);
     }
   };
 
@@ -74,14 +86,26 @@ const SystemStatus = ({ embedded = false }) => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
-    try {
-      await settingsAPI.import(JSON.parse(await file.text()));
-      toast.success('Settings imported');
-      window.location.reload();
-    } catch (err) {
-      toast.error('Import failed — is this a Bookarr settings file?');
+    
+    if (window.confirm('Restore this backup? The database is replaced with the file, everyone is signed out, and a copy of the current database is saved to the backups folder first.')) {
+      try {
+        const formData = new FormData();
+        formData.append('dbFile', file);
+        
+        toast.info('Uploading and restoring backup...');
+        const { data } = await systemAPI.restoreBackup(formData);
+        
+        toast.success(data?.safetySnapshot ? `Restore complete (previous database kept as ${data.safetySnapshot})` : 'Restore complete.');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 3000);
+      } catch (err) {
+        toast.error(`Import failed — ${err.response?.data?.error || 'is this a valid Bookarr backup (.zip or .sqlite)?'}`);
+        console.error(err);
+      }
     }
   };
+
 
   const fetchLogs = async () => {
     setLogsLoading(true);
@@ -323,12 +347,12 @@ const SystemStatus = ({ embedded = false }) => {
             <div className="status-grid">
               <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
                 <h3>Backup & Restore</h3>
-                <p style={{ color: '#ccc', marginBottom: '20px' }}>Export or restore all settings. The export includes API keys and passwords.</p>
+                <p style={{ color: '#ccc', marginBottom: '20px' }}>Download a complete backup of Bookarr's data. The database holds your settings, users, books, reading and listening progress, notifications, indexers and download clients, and the export takes a consistent snapshot of it. A restore swaps that database back in and keeps a copy of the current one first, so a mistake is reversible. Your ebook and audiobook files are not included - back up the library folders themselves too.</p>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button type="button" className="refresh-btn" onClick={handleExport}>⬇️ Export settings</button>
+                  <button type="button" className="refresh-btn" onClick={handleExport}>⬇️ Download backup</button>
                   <label className="refresh-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    ⬆️ Import settings
-                    <input type="file" accept=".json,application/json" onChange={handleImport} style={{ display: 'none' }} />
+                    ⬆️ Restore backup
+                    <input type="file" accept=".zip,.sqlite,.sqlite3,.db,application/zip,application/x-sqlite3" onChange={handleImport} style={{ display: 'none' }} />
                   </label>
                 </div>
               </div>
