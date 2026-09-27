@@ -16,9 +16,13 @@ RUN npm run build
 # ---------- Backend dependencies ----------
 # Build tools are only needed here, in case a native module (sqlite3, bcrypt) has no prebuilt binary
 FROM node:22-bookworm-slim AS backend-deps
+# yt-dlp-exec's preinstall runs `npx bin-version-check-cli python ">=2"`, and Debian only ships
+# python3 - without a `python` on PATH the whole npm ci fails. The runtime uses the pip-installed
+# yt-dlp in /opt/venv, so this shim is only needed while the node deps are installed.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 make g++ \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && ln -sf /usr/bin/python3 /usr/local/bin/python
 WORKDIR /app
 COPY backend/package*.json ./
 # System chromium / yt-dlp / ffmpeg are used at runtime, so skip the npm-bundled downloads
