@@ -156,11 +156,23 @@ const SystemStatus = ({ embedded = false }) => {
         >
           Logs
         </button>
-        <button 
+                <button 
           className={`tab-btn ${activeSubTab === 'about' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('about')}
         >
           About
+        </button>
+        <button 
+          className={`tab-btn ${activeSubTab === 'backup' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('backup')}
+        >
+          Backup
+        </button>
+        <button 
+          className={`tab-btn ${activeSubTab === 'updates' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('updates')}
+        >
+          Updates
         </button>
       </div>
 
