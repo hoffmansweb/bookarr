@@ -205,6 +205,34 @@ const SystemStatus = ({ embedded = false }) => {
             </div>
           )}
 
+          {activeSubTab === 'about' && (
+            <div className="about-container glass-panel" style={{ padding: '30px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                <img src="/logo192.png" alt="Bookarr Logo" width="120" style={{ borderRadius: '24px', marginBottom: '10px' }} />
+                <h2 style={{ fontSize: '2em', margin: 0 }}>Bookarr</h2>
+                <p style={{ fontSize: '1.2em', color: '#ccc', maxWidth: '500px', lineHeight: '1.5' }}>
+                  The ultimate self-hosted Ebook and Audiobook Library Manager.
+                </p>
+                <div style={{ marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <a href="https://github.com/YourUsername/Bookarr" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>📦 GitHub Repository</a>
+                  <a href="https://github.com/YourUsername/Bookarr/issues" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>🐛 Report a Bug</a>
+                  <a href="https://github.com/YourUsername/Bookarr/discussions" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>💬 Discussions</a>
+                </div>
+                <div style={{ marginTop: '40px', padding: '20px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '12px', width: '100%', maxWidth: '400px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ color: '#888' }}>Version</span>
+                    <strong>{statusData?.system?.version || 'Unknown'}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#888' }}>Node.js</span>
+                    <strong>{statusData?.system?.nodeVersion || 'Unknown'}</strong>
+                  </div>
+                </div>
+                <p style={{ marginTop: '20px', color: '#666', fontSize: '0.9em' }}>Developed with ❤️ by the Bookarr community.</p>
+              </div>
+            </div>
+          )}
+
           {activeSubTab === 'logs' && (
             <div className="logs-container glass-panel">
               <div className="logs-panel-header">
