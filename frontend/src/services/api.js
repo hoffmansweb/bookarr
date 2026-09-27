@@ -24,6 +24,16 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // The default above is application/json, and axios acts on that header before the request is sent:
+  // a FormData body posted under it is turned into a JSON string (axios lib/defaults/index.js,
+  // transformRequest). A backup upload therefore arrived as {"dbFile":{}} - the file already gone -
+  // and the API answered 400 "the request body was sent as application/json". Clearing the header for
+  // uploads hands the job back to the browser, which sets multipart/form-data itself, boundary
+  // included; a hand-written 'multipart/form-data' cannot, which is why this must be deleted
+  // rather than replaced.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    config.headers.delete('Content-Type');
+  }
   return config;
 });
 
@@ -197,7 +207,9 @@ export const systemAPI = {
   downloadBackup: () => api.get('/system/backup/download', { responseType: 'blob' }),
   // No Content-Type here on purpose. Only the browser knows the multipart boundary, and it is part of
   // that header: sending 'multipart/form-data' by hand leaves the boundary out, and express-fileupload
-  // then ignores the whole request (the API only sees "no file" and answers 400).
+  // then ignores the whole request (the API only sees "no file" and answers 400). The interceptor above
+  // additionally clears this instance's application/json default, which would otherwise turn the
+  // upload into JSON - see api.uploads.test.js.
   restoreBackup: (formData) => api.post('/system/backup/restore', formData)
 };
 

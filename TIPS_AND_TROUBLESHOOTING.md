@@ -385,7 +385,7 @@ curl -H "Authorization: Bearer <token>" -F "dbFile=@bookarr-backup-2026-09-27.zi
 
 | Message | What it means | What to do |
 | --- | --- | --- |
-| `No backup file arrived: the request body was sent as "application/json"` | the file was not posted as a form | use the card, or `curl -F dbFile=@…` |
+| `No backup file arrived: the request body was sent as "application/json"` | the file was not posted as a form. The card hit this itself while the API client asked for `application/json` up front: axios serialised the FormData body into `{"dbFile":{}}`, so the upload left the browser with the file already gone | reload the page (an old cached interface did this) and retry, or `curl -F dbFile=@…` |
 | `No backup file arrived: … multipart/form-data with no boundary` | the client set `Content-Type: multipart/form-data` itself, so the boundary that marks where the file starts was missing and the upload was dropped | reload the page (an old cached interface did this) and retry |
 | `"file" arrived empty (0 bytes)` | the download or the copy never finished | download the backup again |
 | `That file is neither a SQLite database nor a readable .zip archive` | not a Bookarr backup — `.gz`, `.tar`, `.sql`, `.7z` and folders of books cannot be read here | upload the `.zip` Bookarr wrote, or a `database.sqlite` |
