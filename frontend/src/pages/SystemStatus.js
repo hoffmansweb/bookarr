@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { systemAPI } from '../services/api';
+import { systemAPI, settingsAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import './SystemStatus.css';
 
@@ -28,6 +28,35 @@ const SystemStatus = ({ embedded = false }) => {
       toast.error('Failed to load system status');
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const handleExport = async () => {
+    try {
+      const { data } = await settingsAPI.getAll();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bookarr-settings.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Settings exported (contains API keys — store it safely)');
+    } catch (e) {
+      toast.error('Export failed');
+    }
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      await settingsAPI.import(JSON.parse(await file.text()));
+      toast.success('Settings imported');
+      window.location.reload();
+    } catch (err) {
+      toast.error('Import failed — is this a Bookarr settings file?');
     }
   };
 
@@ -208,6 +237,23 @@ const SystemStatus = ({ embedded = false }) => {
                   </div>
                 ))
               )}
+            </div>
+          )}
+
+          
+          {activeSubTab === 'backup' && (
+            <div className="status-grid">
+              <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
+                <h3>Backup & Restore</h3>
+                <p style={{ color: '#ccc', marginBottom: '20px' }}>Export or restore all settings. The export includes API keys and passwords.</p>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="button" className="refresh-btn" onClick={handleExport}>⬇️ Export settings</button>
+                  <label className="refresh-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    ⬆️ Import settings
+                    <input type="file" accept=".json,application/json" onChange={handleImport} style={{ display: 'none' }} />
+                  </label>
+                </div>
+              </div>
             </div>
           )}
 

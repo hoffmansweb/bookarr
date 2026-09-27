@@ -16,34 +16,7 @@ const FolderField = ({ label, help, value, onChange, onBrowse, placeholder }) =>
 const GeneralSection = ({ settings, set, reload }) => {
   const [picker, setPicker] = useState(null); // { key, title }
 
-  const handleExport = async () => {
-    try {
-      const { data } = await settingsAPI.getAll();
-      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'bookarr-settings.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Settings exported (contains API keys — store it safely)');
-    } catch (e) {
-      toast.error('Export failed');
-    }
-  };
-
-  const handleImport = async (e) => {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      await settingsAPI.import(JSON.parse(await file.text()));
-      toast.success('Settings imported');
-      reload();
-    } catch (err) {
-      toast.error('Import failed — is this a Bookarr settings file?');
-    }
-  };
-
+  
   return (
     <>
       <Card title="Getting books" description="What happens when you click Get on a book.">
@@ -190,16 +163,7 @@ const GeneralSection = ({ settings, set, reload }) => {
         </Grid>
       </Card>
 
-      <Card title="Backup" description="Export or restore all settings. The export includes API keys and passwords.">
-        <div className="s-row">
-          <button type="button" className="s-btn" onClick={handleExport}>⬇️ Export settings</button>
-          <label className="s-btn s-file-btn">
-            ⬆️ Import settings
-            <input type="file" accept=".json,application/json" onChange={handleImport} className="s-visually-hidden" />
-          </label>
-        </div>
-      </Card>
-
+      
       {picker && (
         <FolderPicker
           title={picker.title}
