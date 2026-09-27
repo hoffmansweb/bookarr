@@ -1,0 +1,28 @@
+node_modules/
+.env
+.env.*
+*.log
+.DS_Store
+logs/
+dist/
+build/
+backend/public/
+frontend/build/
+
+# Bookarr specific
+backend/data/
+backend/tts/cache/
+backend/tts/piper/
+backend/tts/kokoro/
+backend/tts/voices/
+*.sqlite
+*.db
+
+# Dev scripts / scratchpad
+scratch_*.js
+*.ps1
+*.bat
+
+# IDE
+.vscode/
+.idea/

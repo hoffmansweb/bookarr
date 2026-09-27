@@ -1,0 +1,174 @@
+.search-results-modal {
+  max-width: 1200px;
+  width: 90vw;
+}
+
+.search-query {
+  color: #8b98a5;
+  margin: 10px 0 0 0;
+  font-size: 0.95rem;
+}
+
+.no-results {
+  text-align: center;
+  color: #8b98a5;
+  padding: 40px;
+  font-size: 1.1rem;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.result-item {
+  background: #0f1419;
+  padding: 16px;
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #38444d;
+  transition: border-color 0.2s;
+}
+
+.result-item:hover {
+  border-color: #1d9bf0;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.result-info strong {
+  color: #e1e8ed;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.result-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-cover {
+  width: 40px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.85rem;
+  align-items: center;
+}
+
+.result-meta span {
+  color: #8b98a5;
+}
+
+.result-meta .indexer {
+  color: #1d9bf0;
+  font-weight: 600;
+}
+
+.result-meta .format-badge {
+  background: #00ba7c;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.result-meta .format-audiobook {
+  background: #9b59b6;
+}
+
+.result-meta .format-epub {
+  background: #00ba7c;
+}
+
+.result-meta .format-pdf {
+  background: #e74c3c;
+}
+
+.result-meta .format-mobi {
+  background: #3498db;
+}
+
+.result-meta .type-badge {
+  background: #38444d;
+  color: #8b98a5;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.result-meta .seeders {
+  color: #00ba7c;
+  font-weight: 600;
+}
+
+.result-meta .peers {
+  color: #8b98a5;
+}
+
+.result-meta .size {
+  color: #ffd700;
+}
+
+.result-genre {
+  font-size: 0.8rem;
+  color: #536471;
+  font-style: italic;
+}
+
+.download-btn {
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* Phone: the two-column row (info | Download button) squeezed the title, and the touch
+   :hover border stayed lit after a tap */
+@media (max-width: 768px) {
+  .search-results-modal {
+    width: 100%;
+    max-width: none;
+  }
+
+  .result-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .result-item:hover {
+    border-color: #38444d;
+  }
+
+  .download-btn {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+  }
+
+  /* The × is pinned to the top-right corner, so a centred header used to run underneath it */
+  .search-results-modal .modal-header {
+    align-items: flex-start;
+    text-align: left;
+    padding-right: 56px;
+  }
+}

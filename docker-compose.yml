@@ -1,0 +1,75 @@
+services:
+  bookarr:
+    image: ghcr.io/${GITHUB_USER:-your-username}/bookarr:latest
+    container_name: bookarr
+    ports:
+      - "${BOOKARR_PORT:-5000}:5000"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - GOOGLE_BOOKS_API_KEY=${GOOGLE_BOOKS_API_KEY:-}
+      # Optional: leave unset and a secret is generated once and kept in the data volume
+      - JWT_SECRET=${JWT_SECRET:-}
+      # Own everything Bookarr writes (library folders, downloads) with your host user
+      # instead of root: set these to the ids from `id -u` / `id -g`. Leave unset for
+      # root, which is what you need when the mounted folders are root-only (some NAS shares).
+      - PUID=${PUID:-}
+      - PGID=${PGID:-}
+      # Defaults for settings (anything set in the UI overrides these)
+      - FLARESOLVERR_URL=http://flaresolverr:8191
+      - SEARXNG_URL=http://searxng:8080
+      # Optional: an OpenAI-compatible TTS server on your network (Kokoro-FastAPI,
+      # openedai-speech, LocalAI, ...). Blank uses the bundled Edge TTS voices, which need
+      # no extra setup - the reader just needs outbound internet access.
+      - TTS_OPENAI_BASE_URL=${KOKORO_URL:-}
+      - YTDLP_AUTO_UPDATE=true
+    volumes:
+      - bookarr_data:/app/data
+      - ${DOWNLOAD_DIR:-./downloads}:/downloads
+      - ${LIBRARY_DIR:-./library}:/library
+    # Chromium needs more shared memory than Docker's 64 MB default
+    shm_size: 1gb
+    depends_on:
+      - flaresolverr
+      - searxng
+    restart: unless-stopped
+    # Keep `docker logs` bounded; Bookarr also writes its own rotating logs to /app/data/logs
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Solves DDoS-Guard/Cloudflare checks for Anna's Archive (Bookarr falls back to its own browser)
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ:-America/Chicago}
+    restart: unless-stopped
+
+  # Private metasearch: gives Bookarr Google (and other engines') results for audiobook search
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    environment:
+      - SEARXNG_SECRET=${SEARXNG_SECRET:-change-me-to-a-long-random-string}
+    volumes:
+      - ./docker/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=${UPDATE_INTERVAL:-300}
+      - WATCHTOWER_LABEL_ENABLE=true
+    restart: unless-stopped
+
+volumes:
+  bookarr_data:

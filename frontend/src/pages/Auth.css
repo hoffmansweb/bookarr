@@ -1,0 +1,74 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f1419 0%, #192734 100%);
+}
+
+.auth-card {
+  background: #192734;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card h1 {
+  color: #1d9bf0;
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 2rem;
+}
+
+.auth-card h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #8b98a5;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.auth-card button {
+  margin-top: 10px;
+  padding: 14px;
+  font-size: 16px;
+}
+
+.auth-card p {
+  text-align: center;
+  margin-top: 20px;
+  color: #8b98a5;
+}
+
+.auth-card a {
+  color: #1d9bf0;
+  text-decoration: none;
+}
+
+.auth-card a:hover {
+  text-decoration: underline;
+}
+
+/* Phone: 40px of padding on a 360px screen left the fields cramped */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .auth-card h1 {
+    font-size: 1.6rem;
+  }
+
+  .auth-card h2 {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+}

@@ -1,0 +1,26 @@
+# Minimal SearXNG config for Bookarr. Only reachable inside the compose network.
+use_default_settings: true
+
+server:
+  # Overridden by the SEARXNG_SECRET environment variable
+  secret_key: "overridden-by-env"
+  # Bookarr is the only client; the rate limiter would need a separate Valkey/Redis container
+  limiter: false
+  image_proxy: false
+
+search:
+  safe_search: 0
+  # Bookarr calls /search?format=json
+  formats:
+    - html
+    - json
+
+engines:
+  - name: google
+    disabled: false
+  - name: duckduckgo
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: brave
+    disabled: false

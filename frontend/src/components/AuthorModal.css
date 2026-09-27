@@ -1,0 +1,676 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #192734;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 80vh;
+  /* dvh measures the *visible* viewport, so a phone's URL bar cannot hide part of the modal */
+  max-height: 80dvh;
+  overflow-y: auto;
+  position: relative;
+  border: 1px solid #38444d;
+}
+
+/* Phone: modals take the whole screen; the safe-area padding keeps the close button and the
+   last row clear of the notch and the home indicator (index.html sets viewport-fit=cover). */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 100%;
+    height: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Author modal: the header and the action footer stay put while the (long) book list scrolls.
+   Scoped with .author-modal so BookModal / SearchResultsModal keep their whole-content scrolling. */
+.author-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.author-modal .modal-header {
+  flex: 0 0 auto;
+}
+
+.author-modal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.author-modal .modal-actions {
+  flex: 0 0 auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: #8b98a5;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .modal-close {
+    width: 44px;
+    height: 44px;
+    /* .modal-content pads itself by the notch inset, but this button is absolutely positioned so
+       it did not move with it and sat under the status bar. The side inset covers landscape. */
+    top: calc(10px + env(safe-area-inset-top));
+    right: calc(10px + env(safe-area-inset-right));
+  }
+}
+
+.modal-close:hover {
+  color: #e1e8ed;
+  background: transparent;
+}
+
+.modal-header {
+  padding: 20px 30px;
+  border-bottom: 1px solid #38444d;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .modal-header {
+    padding: 15px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.modal-header img,
+.modal-header .author-avatar-fallback {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.modal-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .modal-header h2 {
+    font-size: 1.3rem;
+  }
+}
+
+.modal-body {
+  padding: 20px 30px;
+}
+
+@media (max-width: 768px) {
+  .modal-body {
+    padding: 20px 15px;
+  }
+}
+
+.modal-stats {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.modal-stats-left {
+  display: flex;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .modal-stats {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-stats {
+    gap: 15px;
+  }
+}
+
+.modal-stats .stat {
+  text-align: center;
+}
+
+.modal-stats .stat strong {
+  display: block;
+  font-size: 1.5rem;
+  color: #1d9bf0;
+  margin-bottom: 3px;
+}
+
+@media (max-width: 768px) {
+  .modal-stats .stat strong {
+    font-size: 1.5rem;
+  }
+}
+
+.modal-stats .stat span {
+  color: #8b98a5;
+  font-size: 0.9rem;
+}
+
+.book-toggle-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.book-toggle-actions label {
+  color: #8b98a5;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.book-toggle-actions select {
+  padding: 6px 10px;
+  background: #0f1419;
+  border: 1px solid #38444d;
+  border-radius: 6px;
+  color: #e1e8ed;
+  font-size: 0.85rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .book-toggle-actions select {
+    padding: 12px;
+    font-size: 1rem;
+    min-height: 44px;
+  }
+}
+
+.book-toggle-actions select:hover {
+  border-color: #1d9bf0;
+}
+
+.bio-section {
+  margin-bottom: 20px;
+}
+
+.bio-toggle {
+  background: transparent;
+  border: none;
+  color: #1d9bf0;
+  cursor: pointer;
+  padding: 8px 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+
+.bio-toggle:hover {
+  color: #4a9eff;
+  background: transparent;
+}
+
+.bio {
+  color: #8b98a5;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.modal-actions {
+  padding: 20px 30px;
+  border-top: 1px solid #38444d;
+  background: #192734;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .modal-actions {
+    padding: 15px;
+    gap: 8px;
+  }
+}
+
+/* Last-checked time + live search progress, pinned above the buttons */
+.modal-actions-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  color: #8b98a5;
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+.modal-actions-time {
+  white-space: nowrap;
+}
+
+.modal-actions-progress {
+  color: #1d9bf0;
+  min-width: 0;
+}
+
+.modal-actions-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .modal-actions-buttons {
+    gap: 8px;
+  }
+}
+
+.modal-actions-buttons button {
+  flex: 1;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .modal-actions-buttons button {
+    min-height: 44px;
+    font-size: 14px;
+  }
+}
+
+.modal-actions .delete-btn {
+  background: #f91880;
+}
+
+.modal-actions .delete-btn:hover {
+  background: #d01060;
+}
+
+.modal-actions .monitored {
+  background: #00ba7c;
+}
+
+.modal-actions .monitored:hover {
+  background: #00a368;
+}
+
+.books-list {
+  margin-top: 30px;
+}
+
+.books-list h3 {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.book-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 10px 15px;
+  padding: 15px;
+  background: #0f1419;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  align-items: start;
+}
+
+.book-item .book-star-btn {
+  grid-column: 1;
+  grid-row: 1;
+  background: #192734;
+  border: 1px solid #38444d;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px 10px;
+  transition: all 0.2s;
+  color: #e1e8ed;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.book-status-select {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 8px 10px;
+  border: 1px solid #38444d;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 100px;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.book-status-select.status-wanted {
+  background: #1d9bf0;
+  color: white;
+  border-color: #1d9bf0;
+}
+
+.book-status-select.status-downloading {
+  background: #ffa500;
+  color: white;
+  border-color: #ffa500;
+}
+
+.book-status-select.status-available {
+  background: #00ba7c;
+  color: white;
+  border-color: #00ba7c;
+}
+
+.book-status-select.status-reading {
+  background: #ffd700;
+  color: black;
+  border-color: #ffd700;
+}
+
+.book-status-select.status-completed {
+  background: #8b98a5;
+  color: white;
+  border-color: #8b98a5;
+}
+
+.book-status-select.status-ignored {
+  background: #536471;
+  color: white;
+  border-color: #536471;
+}
+
+.book-item img {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.book-item-center {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.book-item-right {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.book-status-select:hover {
+  border-color: #1d9bf0;
+}
+
+.book-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.book-actions button {
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 50px;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.book-item-right:has(.play-btn) .book-actions button {
+  padding: 3px 6px;
+  font-size: 0.7rem;
+  min-height: 24px;
+  min-width: 45px;
+}
+
+/* Same disabled look the buttons used to inherit from BookCard.css's global rule */
+.author-modal .book-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .book-actions button {
+    padding: 12px 16px;
+    font-size: 1rem;
+    min-height: 48px;
+    min-width: 80px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  
+  .book-actions button:disabled {
+    padding: 2px 4px;
+    font-size: 0.6rem;
+    min-height: 20px;
+    min-width: 40px;
+    line-height: 1;
+  }
+  
+  .book-item-right:has(.play-btn) .book-actions button {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-height: 32px;
+    min-width: 55px;
+  }
+}
+
+.search-btn {
+  background: #1d9bf0;
+}
+
+.nzb-results-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: #192734;
+  border-radius: 8px;
+  border: 1px solid #38444d;
+}
+
+.nzb-results-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  color: #1d9bf0;
+}
+
+.nzb-item {
+  background: #0f1419;
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.nzb-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nzb-info strong {
+  color: #e1e8ed;
+  font-size: 0.9rem;
+}
+
+.nzb-info span {
+  color: #8b98a5;
+  font-size: 0.8rem;
+}
+
+.nzb-item button {
+  padding: 6px 16px;
+  font-size: 0.85rem;
+}
+
+.status-wanted { color: #1d9bf0; }
+.status-downloading { color: #ffa500; }
+.status-available { color: #00ba7c; }
+.status-reading { color: #ffd700; }
+.status-completed { color: #8b98a5; }
+.status-ignored { color: #536471; }
+
+.download-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 20px;
+  background: #0f1419;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #38444d;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1d9bf0, #4a9eff);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  color: #1d9bf0;
+  font-size: 0.85rem;
+  font-weight: bold;
+  min-width: 40px;
+}
+
+.play-btn {
+  background: #00ba7c;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.play-btn:hover {
+  background: #00a368;
+}
+
+/* Inline spinner for the book action buttons and the footer button.
+   Scoped to the modal so the page-level .spinner (the big 50px ring in Authors.css
+   used by the "Searching for authors..." overlay) can never win here. */
+.author-modal .spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 5px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.book-item img {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.book-item-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.book-item-center strong {
+  color: #e1e8ed;
+  font-size: 1rem;
+}
+
+.book-item-center span {
+  color: #8b98a5;
+  font-size: 0.85rem;
+}
+
+/* Series line — rendered only when the book is part of a series.
+   The "Book N" number comes from seriesPosition, or is parsed out of the series
+   name ("Society of Villains #1") by parseBookSeries in AuthorModal.js. */
+.book-item-center .book-series {
+  color: #4a9eff;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-item-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.spin-icon {
+  display: inline-block;
+  animation: spin 1.5s linear infinite;
+  margin-right: 5px;
+}
+

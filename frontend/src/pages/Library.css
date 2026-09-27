@@ -1,0 +1,52 @@
+.library-page h1 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-buttons button {
+  padding: 8px 16px;
+  background: #192734;
+  border: 1px solid #38444d;
+  color: #e7e9ea;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-buttons button:hover {
+  background: #1d9bf0;
+  border-color: #1d9bf0;
+}
+
+.filter-buttons button.active {
+  background: #1d9bf0;
+  border-color: #1d9bf0;
+}
+
+/* Phone: the four filters needed to wrap, and on touch the :hover blue stuck after a tap */
+.filter-buttons {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .filter-buttons {
+    gap: 8px;
+  }
+
+  .filter-buttons button {
+    padding: 10px 16px;
+  }
+}
+
+@media (hover: none) {
+  .filter-buttons button:hover:not(.active) {
+    background: #192734;
+    border-color: #38444d;
+  }
+}

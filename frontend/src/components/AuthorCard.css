@@ -1,0 +1,167 @@
+.author-card {
+  background: #192734;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #38444d;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.author-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(29, 155, 240, 0.2);
+}
+
+@media (max-width: 768px) {
+  .author-card:hover {
+    transform: none;
+  }
+}
+
+.author-card img,
+.author-card .author-avatar-fallback {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: #0f1419;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 768px) {
+  .author-card img, .author-card .author-avatar-fallback {
+    height: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .author-card img, .author-card .author-avatar-fallback {
+    height: 150px;
+  }
+}
+
+.author-info {
+  padding: 15px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .author-info {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .author-info {
+    padding: 10px;
+  }
+}
+
+.author-info h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .author-info h3 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .author-info h3 {
+    font-size: 0.95rem;
+  }
+}
+
+.author-info .book-count {
+  color: #8b98a5;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.author-info .genres {
+  color: #1d9bf0;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.author-info .bio {
+  color: #8b98a5;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.author-info .last-checked {
+  color: #536471;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+/* "Why is this author in my results?" - only rendered for a search hit that came from a book
+   title (see the Authors page search). One clamped line, the same trick the book cards use,
+   because a long list of matched titles must not stretch the card or the grid column. */
+.author-info .matched-books {
+  color: #1d9bf0;
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+
+.author-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+@media (max-width: 768px) {
+  .author-actions {
+    gap: 6px;
+  }
+}
+
+.author-actions button {
+  flex: 1;
+  padding: 8px;
+  font-size: 13px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .author-actions button {
+    padding: 12px 8px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
+.author-actions button.monitored {
+  background: #00ba7c;
+}
+
+.author-actions button.monitored:hover {
+  background: #00a368;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  display: inline-block;
+  animation: spin 1.5s linear infinite;
+  margin-right: 5px;
+}

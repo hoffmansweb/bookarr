@@ -1,0 +1,56 @@
+.dl-progress {
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: #16202b;
+  border: 1px solid #2f3d4a;
+  border-radius: 10px;
+}
+.dl-progress__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.dl-progress__label { font-weight: 700; color: #e7e9ea; }
+.dl-progress__source { color: #9aa7b2; font-size: 0.85rem; }
+.dl-progress__track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: #2a3744;
+  overflow: hidden;
+}
+.dl-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0f6cbd, #4ab3f4);
+  transition: width 0.6s ease;
+}
+/* Unknown percentage: sliding bar */
+.dl-progress__track.is-indeterminate .dl-progress__fill {
+  position: absolute;
+  width: 35%;
+  animation: dl-slide 1.4s ease-in-out infinite;
+}
+@keyframes dl-slide {
+  0% { left: -35%; }
+  100% { left: 100%; }
+}
+.dl-progress__meta {
+  margin-top: 8px;
+  color: #9aa7b2;
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.dl-progress__msg { color: #c4ced6; }
+.dl-progress.is-failed .dl-progress__fill { background: #f4212e; width: 100%; }
+.dl-progress.is-failed .dl-progress__label { color: #ff8a93; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-progress__fill { transition: none; }
+  .dl-progress__track.is-indeterminate .dl-progress__fill { animation: none; left: 0; width: 100%; opacity: 0.4; }
+}

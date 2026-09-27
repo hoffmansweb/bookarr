@@ -1,0 +1,45 @@
+node_modules
+backend/node_modules
+frontend/node_modules
+frontend/build
+backend/public
+backend/logs
+backend/database.sqlite
+backend/.jwt_secret
+bookarr.db
+backend/.env
+frontend/.env
+.env
+.env.*
+*.bat
+*.iss
+.git
+.github
+.gitignore
+*.md
+
+# Windows-only / unused TTS assets (~380 MB) and runtime caches
+backend/tts/piper
+backend/tts/kokoro
+backend/tts/voices
+backend/tts/cache
+
+# Debug dumps, screenshots and one-off scripts
+backend/*.png
+backend/*.html
+backend/_tmp_*
+backend/scratch_*
+
+# Runtime data: `COPY backend/ ./` would otherwise bake personal data (nightly database
+# snapshots, logs) into the image. The container creates these inside its volumes instead.
+backend/backups
+backend/data
+*.sqlite
+*.sqlite3
+backend/*.log
+
+# Installer / editor leftovers
+installer-output
+*.exe
+.vscode
+.idea

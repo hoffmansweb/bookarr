@@ -1,0 +1,99 @@
+.authors-page h1 {
+  font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .authors-page h1 {
+    font-size: 1.5rem;
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .header-actions {
+    width: 100%;
+    gap: 10px;
+  }
+}
+
+.add-author-btn {
+  padding: 10px 20px;
+  background: #1d9bf0;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+
+@media (max-width: 768px) {
+  .add-author-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+.add-author-btn:hover, .add-author-btn:active {
+  background: #1a8cd8;
+}
+
+@media (max-width: 768px) {
+  .add-author-btn:hover {
+    background: #1d9bf0;
+  }
+}
+
+/* Sits between the filters and the grid once a search is running; says out loud that the box
+   matches book titles as well as names, since an author card cannot always show it. */
+.authors-page .search-summary {
+  color: #8b98a5;
+  font-size: 0.9rem;
+  margin: 0 0 4px;
+}
+
+.searching-modal {
+  background: #192734;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #38444d;
+}
+
+/* Big ring for the "Searching for authors..." overlay only — scoped so it does not
+   leak into every .spinner elsewhere in the app (modals use small inline spinners). */
+.searching-modal .spinner {
+  border: 4px solid #38444d;
+  border-top: 4px solid #1d9bf0;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Phone: the "Searching for authors..." overlay had 40px of padding on a 360px screen */
+@media (max-width: 480px) {
+  .searching-modal {
+    padding: 24px 18px;
+  }
+}

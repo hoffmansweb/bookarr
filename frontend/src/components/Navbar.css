@@ -1,0 +1,333 @@
+.navbar {
+  background: #192734;
+  border-bottom: 1px solid #38444d;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+/* Phone only: the ☰ / ✕ button that opens the link drawer (hidden on desktop, where the
+   six links fit in the bar) */
+.nav-toggle {
+  display: none;
+  background: transparent;
+  color: #e1e8ed;
+  border: none;
+  padding: 10px;
+  font-size: 1.3rem;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-toggle:hover, .nav-toggle:active {
+  color: #1d9bf0;
+  background: transparent;
+}
+
+/* Phone: the bar turns into brand + ☰ + bell + avatar, and the links move into a drawer.
+   The (max-height) clause covers landscape phones (iPhone landscape is 844-932px wide, so the
+   width query alone left the six links crammed back into one row). */
+@media (max-width: 768px), (max-height: 480px) {
+  .navbar {
+    padding: 10px 12px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+
+  .nav-actions {
+    gap: 6px;
+  }
+}
+
+.nav-brand a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1d9bf0;
+  text-decoration: none;
+}
+
+@media (max-width: 768px), (max-height: 480px) {
+  .nav-brand a {
+    font-size: 1.2rem;
+  }
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+/* Phone: the links leave the bar and become a drawer under it. Six items do not fit a
+   360px screen, and squeezing them in used to push the whole page sideways. The (max-height)
+   clause applies the same drawer to landscape phones (844-932px wide). */
+@media (max-width: 768px), (max-height: 480px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0;
+    background: #192734;
+    border-bottom: 1px solid #38444d;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+}
+
+.nav-links a {
+  color: #e1e8ed;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 8px;
+}
+
+@media (max-width: 768px), (max-height: 480px) {
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    min-height: 48px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(56, 68, 77, 0.6);
+  }
+
+  .nav-links a:last-child {
+    border-bottom: none;
+  }
+}
+
+.nav-links a:hover, .nav-links a:active {
+  color: #1d9bf0;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.notifications {
+  position: relative;
+}
+
+.notifications > button {
+  background: transparent;
+  position: relative;
+  padding: 8px 12px;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (max-width: 768px), (max-height: 480px) {
+  .notifications > button {
+    padding: 10px;
+  }
+}
+
+.notifications .badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #f91880;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: #192734;
+  border: 1px solid #38444d;
+  border-radius: 8px;
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+/* Phone: the bell sits ~58px from the right edge (the ☰ and the avatar follow it), so a panel
+   anchored to it with right:-15px started off the left of a 360px screen and scrolled the whole
+   page sideways. Anchoring to the viewport keeps it on screen; the rows become tap targets. */
+@media (max-width: 768px), (max-height: 480px) {
+  .notifications-dropdown {
+    position: fixed;
+    top: calc(64px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    margin-top: 0;
+    max-height: min(420px, 60dvh);
+  }
+
+  .notifications-header {
+    padding: 12px 14px;
+  }
+
+  .notifications-header button {
+    padding: 10px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+
+  .notification-item {
+    padding: 14px 12px;
+  }
+
+  .user-dropdown-items button {
+    padding: 14px 12px;
+    font-size: 15px;
+    min-height: 44px;
+  }
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #38444d;
+}
+
+.notifications-header h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.notifications-header button {
+  background: transparent;
+  color: #1d9bf0;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.notifications-list {
+  padding: 10px;
+}
+
+.notification-item {
+  padding: 12px;
+  border-bottom: 1px solid #38444d;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #e1e8ed;
+}
+
+.notification-item p {
+  color: #8b98a5;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1d9bf0;
+  color: white;
+  border: none;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar:hover {
+  background: #1a8cd8;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: #192734;
+  border: 1px solid #38444d;
+  border-radius: 8px;
+  width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.user-dropdown-header {
+  padding: 15px;
+  border-bottom: 1px solid #38444d;
+}
+
+.user-dropdown-header strong {
+  display: block;
+  color: #e1e8ed;
+  margin-bottom: 5px;
+}
+
+.user-dropdown-header span {
+  display: block;
+  color: #8b98a5;
+  font-size: 0.85rem;
+}
+
+.user-dropdown-items {
+  padding: 8px;
+}
+
+.user-dropdown-items button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #e1e8ed;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.user-dropdown-items button:hover {
+  background: #38444d;
+}
+
+

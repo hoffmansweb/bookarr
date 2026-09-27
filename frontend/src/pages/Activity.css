@@ -1,0 +1,383 @@
+.activity-page {
+  padding: 20px 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #38444d;
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  background: #192734;
+  color: #8b98a5;
+  border: 1px solid #38444d;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: #1d9bf0;
+  color: white;
+  border-color: #1d9bf0;
+  box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3);
+}
+
+.tab-btn:hover:not(.active) {
+  background: #38444d;
+  color: white;
+}
+
+.refresh-btn {
+  background: #192734;
+  color: #e1e8ed;
+  border: 1px solid #38444d;
+}
+
+.refresh-btn:hover {
+  background: #38444d;
+}
+
+.glass-panel {
+  background: rgba(25, 39, 52, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 68, 77, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Queue List CSS */
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.activity-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  border-color: #1d9bf0;
+}
+
+.activity-card-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.book-cover-thumbnail {
+  width: 50px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.book-cover-placeholder {
+  width: 50px;
+  height: 75px;
+  background: #38444d;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.book-details h3 {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  color: #e1e8ed;
+}
+
+.author-name {
+  color: #8b98a5;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.media-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.media-badge.ebook {
+  background: rgba(29, 155, 240, 0.15);
+  color: #1d9bf0;
+}
+
+.media-badge.audiobook {
+  background: rgba(0, 186, 124, 0.15);
+  color: #00ba7c;
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-badge.downloading {
+  background: rgba(247, 204, 21, 0.15);
+  color: #f7cc15;
+}
+
+.status-badge.completed, .status-badge.seeding {
+  background: rgba(0, 186, 124, 0.15);
+  color: #00ba7c;
+}
+
+.status-badge.queued {
+  background: rgba(139, 152, 165, 0.15);
+  color: #8b98a5;
+}
+
+.activity-card-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 40%;
+}
+
+.progress-container {
+  flex: 1;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #e1e8ed;
+}
+
+.speed-info {
+  color: #8b98a5;
+  font-weight: normal;
+}
+
+.progress-bar-bg {
+  background: #38444d;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, #1d9bf0, #00ba7c);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease-out;
+}
+
+.cancel-download-btn {
+  background: rgba(244, 33, 46, 0.15);
+  color: #f4212e;
+  border: 1px solid rgba(244, 33, 46, 0.3);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-download-btn:hover {
+  background: #f4212e;
+  color: white;
+  border-color: #f4212e;
+}
+
+/* History CSS */
+.history-table-container {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.history-table th, .history-table td {
+  padding: 15px;
+  border-bottom: 1px solid #38444d;
+}
+
+.history-table th {
+  color: #8b98a5;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.history-table tbody tr:hover {
+  background: rgba(56, 68, 77, 0.3);
+}
+
+.history-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-cover-thumb {
+  width: 30px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.path-cell code {
+  font-family: Consolas, monospace;
+  background: rgba(15, 20, 25, 0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #8b98a5;
+  display: inline-block;
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.empty-state h3 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: #8b98a5;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .activity-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .activity-card-right {
+    width: 100%;
+  }
+}
+
+/* Phone: five table columns cannot fit, so each history row becomes a stacked card. The
+   column name comes from data-label (set in Activity.js). */
+@media (max-width: 768px) {
+  .tabs {
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .history-table-container {
+    padding: 4px 12px;
+  }
+
+  .history-table,
+  .history-table tbody,
+  .history-table tr,
+  .history-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .history-table thead {
+    display: none;
+  }
+
+  .history-table tr {
+    padding: 12px 0;
+    border-bottom: 1px solid #38444d;
+  }
+
+  .history-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .history-table td {
+    padding: 6px 0;
+    border-bottom: none;
+  }
+
+  .history-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    /* also a flex item for the Type cell below - keep it from being squeezed */
+    flex: 0 0 auto;
+    margin-bottom: 2px;
+    color: #8b98a5;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .history-table td:nth-child(3) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .path-cell code {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .history-table tbody tr:hover {
+    background: transparent;
+  }
+
+  .cancel-download-btn {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,259 @@
+.book-card {
+  background: #192734;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #38444d;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.book-card.clickable {
+  cursor: pointer;
+}
+
+.book-card.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(29, 155, 240, 0.2);
+}
+
+@media (max-width: 768px) {
+  .book-card.clickable:hover {
+    transform: none;
+    /* no lift/glow left over after a tap */
+    box-shadow: none;
+  }
+}
+
+/* Every card on the Books grid is exactly the same size: App.css gives the grid equal rows
+   (grid-auto-rows: 1fr), so the cover box, the two-line title and the one-line meta rows are
+   all fixed sizes. A book with no artwork gets the same cover box with a placeholder glyph -
+   before, those cards lost the 280px cover entirely and the grid looked staggered.
+   Scoped under .book-card, and named differently from the Activity page's own
+   .book-cover-placeholder (50x75 thumbnail), so neither page restyles the other. */
+.book-card img,
+.book-card .book-cover-fallback {
+  width: 100%;
+  height: 280px;
+  flex: 0 0 auto;
+  background: #0f1419;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.book-card img {
+  object-fit: cover;
+}
+
+.book-card .book-cover-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #38444d;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .book-card img,
+  .book-card .book-cover-fallback {
+    height: 220px;
+  }
+
+  .book-card .book-cover-fallback {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .book-card img,
+  .book-card .book-cover-fallback {
+    height: 180px;
+  }
+
+  .book-card .book-cover-fallback {
+    font-size: 2rem;
+  }
+}
+
+.book-info {
+  padding: 15px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .book-info {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .book-info {
+    padding: 10px;
+  }
+}
+
+.book-info h3 {
+  font-size: 1rem;
+  line-height: 1.25;
+  /* Two lines are reserved even when the title only needs one, so the badge/author rows below
+     start at the same height on every card in the row. */
+  min-height: 2.5em;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  position: relative;
+  padding-right: 35px;
+}
+
+.book-info .star-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+  z-index: 10;
+  transition: transform 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+@media (max-width: 768px) {
+  .book-info .star-btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 22px;
+  }
+}
+
+.book-info .star-btn:hover, .book-info .star-btn:active {
+  transform: scale(1.2);
+}
+
+/* Phone: the star's tap target grows to 44px, so the title has to reserve room for it */
+@media (max-width: 768px) {
+  .book-info h3 {
+    padding-right: 54px;
+  }
+}
+
+.book-type-badge {
+  display: inline-block;
+  background: #1d9bf0;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-bottom: 8px;
+}
+
+.book-info .author {
+  color: #8b98a5;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.book-info .narrator {
+  color: #8b98a5;
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+}
+
+.book-info .duration,
+.book-info .pages {
+  color: #536471;
+  font-size: 0.85rem;
+  margin: 3px 0;
+}
+
+.book-info .date {
+  color: #536471;
+  font-size: 0.85rem;
+}
+
+.book-info .rating {
+  color: #ffd700;
+  font-size: 0.9rem;
+  margin: 5px 0;
+}
+
+/* A long author or narrator name used to wrap onto a second line and push everything below it
+   further down the card, so two books in the same row no longer lined up. One clamped line each
+   keeps every card's text block identical - the same trick the title above uses, and unlike
+   `white-space: nowrap` it cannot widen the grid column on a phone (the 2-column phone grid blew
+   out to a 450px card inside a 360px viewport with nowrap). */
+.book-info .author,
+.book-info .narrator,
+.book-info .date,
+.book-info .duration,
+.book-info .pages,
+.book-info .rating {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scoped to the Books-page card: AuthorModal has its own .book-actions (a row of
+   Auto/Search buttons) and these rules used to leak into it. */
+.book-card .book-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.book-card .book-actions select {
+  padding: 8px;
+  font-size: 13px;
+}
+
+.book-card .book-actions button {
+  padding: 8px;
+  font-size: 13px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .book-card .book-actions button {
+    padding: 12px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.book-card .book-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

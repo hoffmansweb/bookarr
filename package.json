@@ -1,0 +1,14 @@
+{
+  "name": "bookarr",
+  "version": "1.0.0",
+  "description": "Book Management System - Windows Package",
+  "scripts": {
+    "install": "cd backend && npm install && cd ../frontend && npm install --legacy-peer-deps",
+    "build": "cd frontend && npm run build",
+    "start": "start-bookarr.bat",
+    "stop": "stop-bookarr.bat"
+  },
+  "keywords": ["books", "library", "management", "monitoring"],
+  "author": "Bookarr",
+  "license": "MIT"
+}

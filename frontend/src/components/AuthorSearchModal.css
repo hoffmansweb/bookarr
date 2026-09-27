@@ -1,0 +1,74 @@
+.author-search-modal {
+  max-width: 1200px;
+  max-height: 80vh;
+  /* dvh measures the visible viewport, so a phone's URL bar cannot hide the last row */
+  max-height: 80dvh;
+  overflow-y: auto;
+}
+
+/* The × in here was an unstyled global button (blue block, white text) and the shared mobile
+   .modal-header rule stacked it under the title - it is the only way out of this modal. */
+.author-search-modal .modal-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.author-search-modal .close-btn {
+  flex: 0 0 auto;
+  background: transparent;
+  color: #8b98a5;
+  border: none;
+  padding: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.author-search-modal .close-btn:hover,
+.author-search-modal .close-btn:active {
+  color: #e1e8ed;
+  background: transparent;
+}
+
+.author-search-modal .authors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  /* Full screen like the other modals. The top inset moves onto the header so it survives the
+     header sticking to the top of the scroll area; the compound selector keeps the shared
+     .modal-content rule from winning on source order. */
+  .modal-content.author-search-modal {
+    height: 100%;
+    max-height: none;
+    padding-top: 0;
+  }
+
+  .author-search-modal .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #192734;
+    padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+  }
+
+  .author-search-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .author-search-modal .authors-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+}

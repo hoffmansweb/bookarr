@@ -1,0 +1,7 @@
+# Use this to build locally instead of pulling from registry:
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+
+services:
+  bookarr:
+    build: .
+    image: bookarr:local

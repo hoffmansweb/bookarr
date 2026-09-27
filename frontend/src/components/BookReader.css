@@ -1,0 +1,63 @@
+.reader-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #1e1e1e;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+}
+
+.reader-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: #192734;
+  border-bottom: 1px solid #38444d;
+}
+
+.reader-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.reader-header button {
+  background: transparent;
+  border: none;
+  color: #8b98a5;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.reader-header button:hover {
+  color: #fff;
+}
+
+.reader-container {
+  flex: 1;
+  position: relative;
+}
+
+.reader-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: #fff;
+}
+
+.reader-error button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #1d9bf0;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}

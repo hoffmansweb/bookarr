@@ -1,0 +1,9 @@
+# Installer output
+installer-output/
+Bookarr-Windows-Portable-*/
+
+# Windows shortcuts
+*.lnk
+
+# Service daemon files
+backend/daemon/

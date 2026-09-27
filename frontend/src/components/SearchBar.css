@@ -1,0 +1,25 @@
+.search-bar {
+  display: flex;
+  gap: 10px;
+  max-width: 500px;
+}
+
+.search-bar input {
+  flex: 1;
+}
+
+.search-bar button {
+  white-space: nowrap;
+}
+
+/* Phone: a 500px-capped bar left the button floating mid-row */
+@media (max-width: 768px) {
+  .search-bar {
+    max-width: none;
+    width: 100%;
+  }
+
+  .search-bar button {
+    min-height: 44px;
+  }
+}

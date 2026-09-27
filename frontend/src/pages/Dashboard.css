@@ -1,0 +1,104 @@
+.dashboard h1 {
+  margin-bottom: 30px;
+  font-size: 2rem;
+}
+
+.dashboard section {
+  margin-bottom: 40px;
+}
+
+.dashboard section h2 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #1d9bf0;
+}
+
+/* A section title with a link on the right ("New Arrivals  See all →") */
+.dashboard .section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dashboard .section-header h2 {
+  margin-bottom: 0;
+}
+
+.section-link {
+  color: #1d9bf0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 4px 2px;
+}
+
+.section-link:hover {
+  text-decoration: underline;
+}
+
+/* Card + "Added 3 days ago" caption */
+.dashboard .arrival-item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dashboard .arrival-item .book-card {
+  flex: 1;
+}
+
+.dashboard .arrival-age {
+  margin: 8px 2px 0;
+  color: #8b98a5;
+  font-size: 0.8rem;
+}
+
+.dashboard .arrival-age.fresh {
+  color: #00ba7c;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #8b98a5;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard h1 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .dashboard section {
+    margin-bottom: 30px;
+  }
+
+  .dashboard section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+
+  .section-link {
+    font-size: 0.85rem;
+  }
+
+  .dashboard .section-header {
+    margin-bottom: 15px;
+  }
+
+  .empty-state {
+    padding: 40px 15px;
+  }
+
+  .empty-state p {
+    font-size: 1rem;
+  }
+}
