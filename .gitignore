@@ -26,3 +26,8 @@ scratch_*.js
 # IDE
 .vscode/
 .idea/
+
+# Debug dumps and screenshots (also kept out of the Docker image via .dockerignore)
+backend/*.png
+backend/*.html
+
