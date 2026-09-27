@@ -104,6 +104,12 @@ const SystemStatus = ({ embedded = false }) => {
         >
           Logs
         </button>
+        <button 
+          className={`tab-btn ${activeSubTab === 'about' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('about')}
+        >
+          About
+        </button>
       </div>
 
       {loading && activeSubTab !== 'logs' ? (
