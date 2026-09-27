@@ -29,7 +29,7 @@ const registerJobs = () => {
     schedule: '* * * * *',
     scheduleText: 'Every minute',
     quiet: true,
-    handler: ttsQueueMonitor.run
+    run: ttsQueueMonitor.run
   });
 
   scheduler.register({

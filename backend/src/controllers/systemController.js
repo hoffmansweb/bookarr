@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const sqlite3 = require('sqlite3');
+const crypto = require('crypto');
 const AdmZip = require('adm-zip');
 const sequelize = require('../config/database');
 const { dataDir, dbPath, backupDir } = require('../config/paths');
@@ -152,6 +153,18 @@ const BACKUP_ZIP_LIMIT = 256 * 1024 * 1024; // larger snapshots are sent as a ra
 const SQLITE_MAGIC = 'SQLite format 3\0';
 const CORE_TABLES = ['Users', 'Books', 'Settings'];
 
+// Config and secret state that lives in the data directory instead of the database: a native
+// install keeps .env (API keys, JWT secret) next to database.sqlite, and Bookarr writes a
+// generated session secret to .jwt_secret when the environment has none. Both are tiny, so a
+// complete backup carries them; the download is admin-only and RESTORE.txt says plainly that the
+// archive holds credentials.
+const CONFIG_FILES = [
+  { name: '.env', entry: 'config/env.txt' },
+  { name: '.jwt_secret', entry: 'config/jwt_secret.txt' }
+];
+
+const PLACEHOLDER_SECRET = /^(your-secret-key|change-me)/i;
+
 function uniqueTempPath(label) {
   return path.join(os.tmpdir(), `bookarr-${label}-${Date.now()}-${Math.round(Math.random() * 1e6)}.tmp`);
 }
@@ -247,6 +260,85 @@ async function readSettingsTable(file) {
   }
 }
 
+function sha256File(file) {
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+// Everything a restore needs that SQLite does not hold, as [{ name, entry, data }]
+function collectConfigFiles() {
+  const found = [];
+  for (const { name, entry } of CONFIG_FILES) {
+    const file = path.join(dataDir, name);
+    if (fs.existsSync(file)) {
+      found.push({ name, entry, data: fs.readFileSync(file) });
+    } else if (name === '.jwt_secret' && process.env.JWT_SECRET && !PLACEHOLDER_SECRET.test(process.env.JWT_SECRET)) {
+      // Docker hands the secret over in the environment instead of a file - carry it too
+      found.push({ name, entry, data: Buffer.from(process.env.JWT_SECRET, 'utf8') });
+    }
+  }
+  return found;
+}
+
+// The database stores file paths, never file contents, so a backup can tell a user how many media
+// files are meant to be on disk and in which folders - that is the half rsync has to cover.
+async function libraryInventory(file) {
+  const db = await openReadOnly(file);
+  try {
+    const byType = await new Promise((resolve) => {
+      db.all("SELECT mediaType AS type, COUNT(*) AS total FROM Books WHERE filePath IS NOT NULL AND filePath <> '' GROUP BY mediaType", (err, rows) => resolve(err ? [] : (rows || [])));
+    });
+    const folders = await new Promise((resolve) => {
+      db.all("SELECT key, value FROM Settings WHERE key IN ('ebooks_folder', 'audiobooks_folder', 'download_folder')", (err, rows) => resolve(err ? [] : (rows || [])));
+    });
+    return {
+      files: byType.reduce((acc, row) => Object.assign(acc, { [row.type || 'ebook']: row.total }), {}),
+      folders: folders.reduce((acc, row) => Object.assign(acc, { [row.key]: row.value }), {})
+    };
+  } catch (error) {
+    return { files: {}, folders: {} };
+  } finally {
+    await new Promise((resolve) => db.close(resolve));
+  }
+}
+
+// metadata.json and config/*.txt out of a bundle. A raw .sqlite export (older Bookarr) has neither.
+function readBundleExtras(uploadPath, uploadName) {
+  const empty = { config: [], expectedSha256: null };
+  if (/\.(sqlite3?|db)$/i.test(uploadName || '')) return empty;
+
+  let entries;
+  try {
+    entries = new AdmZip(uploadPath).getEntries();
+  } catch (error) {
+    return empty; // a truncated/corrupt archive: extractDatabaseFromUpload rejects it a moment later
+  }
+
+  const byName = new Map(entries.map((entry) => [entry.entryName, entry]));
+  const extras = { config: [], expectedSha256: null };
+
+  // metadata.json carries a sha256 of the snapshot it shipped with, so a damaged download is caught
+  const metadataEntry = byName.get('metadata.json');
+  if (metadataEntry) {
+    try {
+      const sha = JSON.parse(metadataEntry.getData().toString('utf8'))?.database?.sha256;
+      if (typeof sha === 'string' && /^[0-9a-f]{64}$/.test(sha)) extras.expectedSha256 = sha;
+    } catch (error) { /* metadata is advisory */ }
+  }
+
+  for (const { name, entry } of CONFIG_FILES) {
+    const zipEntry = byName.get(entry);
+    if (!zipEntry) continue;
+    const data = zipEntry.getData();
+    // Refuse to write junk over a working .env or session secret
+    const usable = name === '.env'
+      ? /^[A-Za-z_][A-Za-z0-9_]*\s*=/m.test(data.toString('utf8'))
+      : data.toString('utf8').trim().length >= 32 && !PLACEHOLDER_SECRET.test(data.toString('utf8'));
+    if (usable) extras.config.push({ name, data });
+  }
+
+  return extras;
+}
+
 // Thrown for anything the user uploaded that is not a usable Bookarr backup (-> HTTP 400)
 class InvalidBackupError extends Error {}
 
@@ -257,14 +349,13 @@ function extractDatabaseFromUpload(uploadPath, uploadName) {
     return uploadPath;
   }
 
-  let zip;
+  let entries;
   try {
-    zip = new AdmZip(uploadPath);
+    // AdmZip only complains about a truncated file once the entries are read
+    entries = new AdmZip(uploadPath).getEntries();
   } catch (e) {
     throw new InvalidBackupError('That file is neither a SQLite database nor a readable .zip archive');
   }
-
-  const entries = zip.getEntries();
   const dbEntry = entries.find((entry) => /(^|\/)database\.sqlite$/i.test(entry.entryName))
     || entries.find((entry) => /\.(sqlite3?|db)$/i.test(entry.entryName));
 
@@ -291,21 +382,28 @@ function backupNotes(metadata) {
     '-------------------',
     '  database.sqlite  Everything Bookarr knows: settings, users, books, reading and',
     '                   listening progress, notifications, indexers, download clients.',
+    '                   Passwords are stored as bcrypt hashes, never as plain text.',
     '  settings.json    A readable copy of the settings table (handy for a diff).',
-    '  metadata.json    The same facts as above, machine readable.',
+    '  config/env.txt   Your .env (API keys, JWT secret) - only when the install has one.',
+    '  config/jwt_secret.txt  The generated session secret, when Bookarr made one.',
+    '  metadata.json    Version, row counts, database checksum and a library inventory.',
+    '',
+    'This archive contains credentials, so keep it somewhere safe.',
     '',
     'Not inside (by design)',
     '----------------------',
-    '  - Your ebooks and audiobooks. They live in the library folders; back those up',
-    '    with the filesystem (rsync, NAS snapshots, ...).',
-    '  - Logs, caches (synthesised TTS audio, downloaded tools) and the JWT secret.',
+    '  - Your ebooks and audiobooks. The database stores their paths, not their bytes, so',
+    '    back the library and download folders up with the filesystem (rsync, NAS snapshots).',
+    '    metadata.json lists how many files to expect and which folders they live in.',
+    '  - Logs and caches (synthesised TTS audio, downloaded tools and voices).',
     '',
     'Restoring',
     '---------',
     '  Settings -> System -> Backup & Restore -> "Restore backup", then pick this file.',
     '  A .zip behaves exactly like a raw .sqlite exported by an older Bookarr.',
-    '  Bookarr copies the current database into its backups folder before swapping, so',
-    '  a restore can always be undone by hand.',
+    '  Bookarr copies the current database into its backups folder before swapping, and renames',
+    '  a replaced .env / .jwt_secret to *.backup-<timestamp>, so a restore can be undone by hand.',
+    '  A restored .env or JWT secret only takes effect after Bookarr is restarted.',
     ''
   ].join('\n');
 }
@@ -321,6 +419,7 @@ exports.downloadBackup = async (req, res) => {
     }
 
     const created = fileStamp();
+    const configFiles = collectConfigFiles();
     snapshot = uniqueTempPath('snapshot');
     await snapshotDatabase(snapshot);
 
@@ -332,18 +431,24 @@ exports.downloadBackup = async (req, res) => {
       nodeVersion: process.version,
       platform: `${process.platform}-${process.arch}`,
       dataDirectory: dataDir,
-      database: path.basename(dbPath),
-      databaseBytes: bytes,
-      tables: await inspectDatabase(snapshot),
+      database: {
+        file: path.basename(dbPath),
+        bytes,
+        sha256: sha256File(snapshot),
+        tables: await inspectDatabase(snapshot)
+      },
+      library: await libraryInventory(snapshot),
+      secrets: configFiles.map((item) => item.entry),
       includes: [
         'database.sqlite (settings, users, books, reading/listening progress, notifications, indexers, download clients)',
         'settings.json (readable copy of the settings table)',
-        'metadata.json (version, row counts, sizes)',
+        'metadata.json (version, row counts, database checksum, library inventory)',
+        'config/env.txt and config/jwt_secret.txt when this install has them (API keys, session secret)',
         'RESTORE.txt (what is inside, what is not)'
       ],
       excludes: [
         'library media files (ebooks/audiobooks) - back up the library and download folders separately',
-        'logs, caches and the JWT signing secret'
+        'logs and caches (synthesised TTS audio, downloaded tools and voices)'
       ]
     };
 
@@ -358,6 +463,7 @@ exports.downloadBackup = async (req, res) => {
     zip.addFile('database.sqlite', fs.readFileSync(snapshot));
     zip.addFile('settings.json', Buffer.from(JSON.stringify(await readSettingsTable(snapshot), null, 2)));
     zip.addFile('metadata.json', Buffer.from(JSON.stringify(metadata, null, 2)));
+    for (const item of configFiles) zip.addFile(item.entry, item.data);
     zip.addFile('RESTORE.txt', Buffer.from(backupNotes(metadata)));
     const archive = zip.toBuffer();
 
@@ -383,6 +489,7 @@ exports.restoreBackup = async (req, res) => {
 
   const uploadPath = upload.tempFilePath || upload.path;
   const uploadName = upload.name || 'backup';
+  const extras = readBundleExtras(uploadPath, uploadName);
   let candidate = null;
   let extracted = false;
 
@@ -394,6 +501,11 @@ exports.restoreBackup = async (req, res) => {
     const missing = CORE_TABLES.filter((table) => !(table in tables));
     if (missing.length) {
       throw new InvalidBackupError(`Not a Bookarr database - the ${missing.join(' / ')} table(s) are missing`);
+    }
+
+    // metadata.json carries the sha256 of the snapshot it was written with
+    if (extras.expectedSha256 && sha256File(candidate) !== extras.expectedSha256) {
+      throw new InvalidBackupError('The database in this archive does not match the checksum in its metadata.json - the file is damaged, so nothing was restored');
     }
 
     // Keep a consistent copy of what we are replacing, so a wrong file is always reversible
@@ -417,16 +529,29 @@ exports.restoreBackup = async (req, res) => {
     await sequelize.query('SELECT 1');
     const restored = await inspectDatabase(dbPath);
 
+    // .env / .jwt_secret from the archive. Both are read once at start-up, so a restored secret
+    // only applies after a restart; the files they replace are kept as *.backup-<timestamp>.
+    const replaced = [];
+    for (const item of extras.config) {
+      const target = path.join(dataDir, item.name);
+      if (fs.existsSync(target)) fs.copyFileSync(target, `${target}.backup-${fileStamp()}`);
+      fs.writeFileSync(target, item.data, { mode: 0o600 });
+      replaced.push(item.name);
+    }
+
     console.log(`Database restored from ${uploadName} (safety copy: ${path.basename(safetySnapshot)})`);
     return res.json({
-      message: 'Backup restored. You have been signed out, so please sign in again.',
+      message: replaced.length
+        ? `Backup restored, including ${replaced.join(' and ')}. You have been signed out, so please sign in again, and restart Bookarr to load the restored settings.`
+        : 'Backup restored. You have been signed out, so please sign in again.',
       restoredFrom: uploadName,
       safetySnapshot: path.basename(safetySnapshot),
+      configFiles: replaced,
       tables: restored
     });
   } catch (error) {
     const rejected = error instanceof InvalidBackupError
-      || /not a database|integrity|SQLite file header|missing/i.test(error.message);
+      || /not a database|integrity|SQLite file header|missing|invalid|central directory|zipper/i.test(error.message);
     if (!rejected) console.error('Backup restore error:', error);
     return res.status(rejected ? 400 : 500).json({ error: error.message });
   } finally {

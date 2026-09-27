@@ -74,6 +74,13 @@ const persist = async () => {
  *                       quiet: true to skip history for no-op runs (run returns null), manualOnly }
  */
 const register = (def) => {
+  // A job whose definition has no run() cannot be scheduled. Refuse it here so a typo (a job once
+  // went in as `handler:` instead of `run:`) shows up once, loudly, at start-up - instead of once
+  // per minute in the log as "job.run is not a function".
+  if (typeof def.run !== 'function') {
+    logger.error(`Job "${def.name || def.id}" was not registered: run must be a function (got ${typeof def.run})`);
+    return;
+  }
   const saved = persisted[def.id] || {};
   jobs.set(def.id, { ...def, running: false, runCount: 0, ...saved });
 };

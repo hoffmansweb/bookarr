@@ -87,7 +87,7 @@ const SystemStatus = ({ embedded = false }) => {
     e.target.value = '';
     if (!file) return;
     
-    if (window.confirm('Restore this backup? The database is replaced with the file, everyone is signed out, and a copy of the current database is saved to the backups folder first.')) {
+    if (window.confirm('Restore this backup? The database is replaced with the file, a copy of the current one is saved to the backups folder first, and any .env / JWT secret in the archive is restored too (the file it replaces is kept with a .backup- date suffix). Everyone is signed out.')) {
       try {
         const formData = new FormData();
         formData.append('dbFile', file);
@@ -95,7 +95,9 @@ const SystemStatus = ({ embedded = false }) => {
         toast.info('Uploading and restoring backup...');
         const { data } = await systemAPI.restoreBackup(formData);
         
-        toast.success(data?.safetySnapshot ? `Restore complete (previous database kept as ${data.safetySnapshot})` : 'Restore complete.');
+        const alsoRestored = data?.configFiles?.length ? ` + ${data.configFiles.join(', ')}` : '';
+        toast.success(data?.safetySnapshot ? `Restore complete: database${alsoRestored} (previous database kept as ${data.safetySnapshot})` : 'Restore complete.');
+        if (data?.configFiles?.length) toast.info('Restart Bookarr to load the restored .env / JWT secret.');
         setTimeout(() => {
           window.location.href = '/login';
         }, 3000);
@@ -347,7 +349,7 @@ const SystemStatus = ({ embedded = false }) => {
             <div className="status-grid">
               <div className="status-card glass-panel" style={{ gridColumn: '1 / -1' }}>
                 <h3>Backup & Restore</h3>
-                <p style={{ color: '#ccc', marginBottom: '20px' }}>Download a complete backup of Bookarr's data. The database holds your settings, users, books, reading and listening progress, notifications, indexers and download clients, and the export takes a consistent snapshot of it. A restore swaps that database back in and keeps a copy of the current one first, so a mistake is reversible. Your ebook and audiobook files are not included - back up the library folders themselves too.</p>
+                <p style={{ color: '#ccc', marginBottom: '20px' }}>Download everything Bookarr keeps: the database (settings, users, books, reading and listening progress, notifications, indexers, download clients) and, when your install has them, your .env and the JWT session secret. Passwords live in the database as bcrypt hashes, never in plain text. A restore swaps the database back in, restores those config files too (the files they replace are renamed with a .backup- date suffix) and saves a copy of the current database first, so a mistake is reversible. Your ebook and audiobook files are not in the archive - the database only holds their paths - so back up the library folders themselves as well. The archive contains credentials, so keep it somewhere safe.</p>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="button" className="refresh-btn" onClick={handleExport}>⬇️ Download backup</button>
                   <label className="refresh-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
