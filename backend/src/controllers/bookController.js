@@ -259,6 +259,8 @@ exports.delete = async (req, res) => {
       return res.status(404).json({ error: 'Book not found' });
     }
 
+    // UserBooks.BookId references Books.id, so the join rows must go first
+    await UserBooks.destroy({ where: { BookId: book.id } });
     await book.destroy();
     res.json({ message: 'Book deleted' });
   } catch (error) {
@@ -682,8 +684,11 @@ exports.mergeDuplicates = async (req, res) => {
     }
     if (Object.keys(patch).length) await keep.update(patch);
 
-    await Book.destroy({ where: { id: rest.map((b) => b.id) } });
-    res.json({ message: `Merged ${books.length} books into "${keep.title}"`, kept: keep.id, removed: rest.map((b) => b.id) });
+    // UserBooks.BookId references Books.id, so clear the join rows before deleting
+    const removedIds = rest.map((b) => b.id);
+    await UserBooks.destroy({ where: { BookId: removedIds } });
+    await Book.destroy({ where: { id: removedIds } });
+    res.json({ message: `Merged ${books.length} books into "${keep.title}"`, kept: keep.id, removed: removedIds });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

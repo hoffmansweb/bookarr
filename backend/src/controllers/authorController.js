@@ -104,6 +104,16 @@ exports.delete = async (req, res) => {
       return res.status(404).json({ error: 'Author not found' });
     }
 
+    // Books and the monitored-author join reference the author, so clear those rows first
+    const { UserBooks } = require('../models');
+    const books = await Book.findAll({ where: { authorId: author.id }, attributes: ['id'] });
+    const bookIds = books.map((b) => b.id);
+    if (bookIds.length) {
+      await UserBooks.destroy({ where: { BookId: bookIds } });
+      await Book.destroy({ where: { id: bookIds } });
+    }
+    await sequelize.query('DELETE FROM UserAuthors WHERE AuthorId = ?', { replacements: [author.id] });
+
     await author.destroy();
     res.json({ message: 'Author deleted' });
   } catch (error) {
