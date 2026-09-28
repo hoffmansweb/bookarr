@@ -29,6 +29,7 @@ router.post('/:id/progress', bookController.updateProgress);
 router.post('/:id/reading-progress', bookController.updateReadingProgress);
 router.get('/:id', bookController.getById);
 router.post('/:id/fetch-metadata', bookController.fetchMetadata);
+router.post('/:id/cancel-download', bookController.cancelDownload);
 router.post('/', bookController.create);
 router.post('/grab', bookController.grab);
 router.post('/add-series', bookController.addSeries);

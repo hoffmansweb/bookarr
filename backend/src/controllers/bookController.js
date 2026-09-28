@@ -165,6 +165,77 @@ exports.addSeries = async (req, res) => {
   }
 };
 
+// Best-effort removal of a partial download for a book: files/folders with an incomplete
+// suffix (.part / .aria2) in the download folder whose name matches the book. Queue clients
+// (SABnzbd, qBittorrent, ...) keep their incomplete data on the client, so there is nothing to
+// remove here — the reset below is what un-sticks those.
+const removePartialDownload = async (book) => {
+  try {
+    const { getSetting } = require('./settingsController');
+    const folder = await getSetting('download_folder');
+    if (!folder || !fs.existsSync(folder)) return null;
+
+    const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const keys = [norm(book.title), norm(book.downloadName)].filter(Boolean);
+    const matches = (name) => keys.some((k) => k && norm(name).includes(k));
+    const PARTIAL = /\.(part|aria2)$/i;
+    const removed = [];
+
+    for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+      if (!matches(entry.name)) continue;
+      const full = path.join(folder, entry.name);
+      try {
+        if (entry.isFile() && PARTIAL.test(entry.name)) {
+          fs.unlinkSync(full);
+          removed.push(entry.name);
+        } else if (entry.isDirectory()) {
+          const inner = fs.readdirSync(full);
+          if (inner.length && inner.every((f) => PARTIAL.test(f))) {
+            fs.rmSync(full, { recursive: true, force: true });
+            removed.push(`${entry.name}/`);
+          }
+        }
+      } catch (err) { /* best effort */ }
+    }
+    return removed.length ? removed.join(', ') : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Manually clear a book stuck at "downloading": reset it to wanted so auto-search can try again,
+// and drop any partial file left in the download folder. Does not touch a finished file.
+exports.cancelDownload = async (req, res) => {
+  try {
+    const book = await Book.findByPk(req.params.id);
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+    if (book.status !== 'downloading') return res.status(400).json({ error: 'Book is not downloading' });
+
+    const removed = await removePartialDownload(book);
+
+    const meta = book.metadata || {};
+    const failedReleases = book.downloadName
+      ? [...new Set([...(meta.failedReleases || []), book.downloadName])].slice(-20)
+      : (meta.failedReleases || []);
+
+    await book.update({
+      status: 'wanted',
+      downloadId: null,
+      downloadName: null,
+      downloadClientId: null,
+      lastSearchedAt: null,
+      metadata: { ...meta, failedReleases, downloadStartedAt: null, currentRelease: null }
+    });
+
+    res.json({
+      message: removed ? `Download cancelled; removed ${removed}` : 'Download cancelled',
+      status: 'wanted'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.update = async (req, res) => {
   try {
     const book = await Book.findByPk(req.params.id);

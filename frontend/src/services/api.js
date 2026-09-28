@@ -66,6 +66,8 @@ export const bookAPI = {
   // Add every book in a series (adds + starts acquiring each one)
   addSeries: (series, author) => api.post('/books/add-series', { series, author }),
   update: (id, data) => api.put(`/books/${id}`, data),
+  // Reset a book stuck at "downloading" back to wanted, clearing any partial download
+  cancelDownload: (id) => api.post(`/books/${id}/cancel-download`),
   delete: (id) => api.delete(`/books/${id}`),
   addToLibrary: (id) => api.post(`/books/${id}/library`),
   getLibrary: () => api.get('/books/library'),

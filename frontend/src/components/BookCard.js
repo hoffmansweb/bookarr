@@ -50,6 +50,21 @@ const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
     return () => socket.off('download:progress', onProgress);
   }, [socket, book.id]);
   const [grabbed, setGrabbed] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancelDownload = async (e) => {
+    e.stopPropagation();
+    setCancelling(true);
+    try {
+      const { data } = await bookAPI.cancelDownload(book.id);
+      toast.success(data?.message || 'Download cancelled');
+      onUpdate?.();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to cancel download');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   // Search results (not in the library yet): add + start looking, per the "Get" setting
   const handleGrab = async (e) => {
@@ -207,6 +222,11 @@ const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
                 {downloadingType === 'audiobook' ? <span className="btn-spinner"></span> : '🎧'} {downloadingType === 'audiobook' ? 'Searching...' : 'Get Audio'}
               </button>
             </>
+          )}
+          {book.status === 'downloading' && (
+            <button onClick={handleCancelDownload} disabled={cancelling} className="cancel-btn">
+              {cancelling ? <span className="btn-spinner"></span> : '✕'} Cancel download
+            </button>
           )}
           {book.status === 'available' && book.filePath && (
             <button onClick={(e) => { 
