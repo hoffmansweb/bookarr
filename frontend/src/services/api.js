@@ -76,6 +76,8 @@ export const bookAPI = {
   getContinueListening: () => api.get('/books/continue-listening'),
   // Dashboard "New Arrivals": { limit, days } are optional
   getRecentArrivals: (params) => api.get('/books/recent-arrivals', { params }),
+  getDuplicates: () => api.get('/books/duplicates'),
+  mergeDuplicates: (bookIds) => api.post('/books/merge-duplicates', { bookIds }),
   toggleStar: (id) => api.post(`/books/${id}/star`),
   updateProgress: (id, data) => api.post(`/books/${id}/book-progress`, data),
   getProgress: (id) => api.get(`/books/${id}/progress`),

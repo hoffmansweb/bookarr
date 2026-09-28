@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import SearchResultsModal from './SearchResultsModal';
 import BookDetailsModal from './BookDetailsModal';
 import Reader from './Reader';
+import PdfReader from './PdfReader';
 import { parseBookSeries } from '../utils/bookSeries';
 import { extractYear } from '../utils/dates';
 import './AuthorModal.css';
@@ -25,6 +26,7 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
   const [selectedBook, setSelectedBook] = useState(null);
   const [detailsBook, setDetailsBook] = useState(null);
   const [readerBook, setReaderBook] = useState(null);
+  const [pdfBook, setPdfBook] = useState(null);
   const [localAuthor, setLocalAuthor] = useState(author);
   const [bioExpanded, setBioExpanded] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({});
@@ -355,7 +357,7 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
                     )}
                     {book.status === 'available' && book.filePath && (
                       <button 
-                        onClick={() => setReaderBook(book)}
+                        onClick={() => (book.bookType !== 'audiobook' && book.filePath.toLowerCase().endsWith('.pdf') ? setPdfBook(book) : setReaderBook(book))}
                         className="play-btn"
                       >
                         {book.bookType === 'audiobook' ? '▶️ Play' : '📖 Read'}
@@ -471,6 +473,13 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
         <Reader
           book={readerBook}
           onClose={() => setReaderBook(null)}
+          onStarredChange={loadStarredBooks}
+        />
+      )}
+      {pdfBook && (
+        <PdfReader
+          book={pdfBook}
+          onClose={() => setPdfBook(null)}
           onStarredChange={loadStarredBooks}
         />
       )}

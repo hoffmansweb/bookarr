@@ -3,6 +3,7 @@ import { bookAPI, nzbAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Reader from './Reader';
+import PdfReader from './PdfReader';
 import DownloadProgress from './DownloadProgress';
 import { useSocket } from '../context/SocketContext';
 import { extractYear } from '../utils/dates';
@@ -11,6 +12,7 @@ import './BookCard.css';
 const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
   const { user } = useAuth();
   const [showReader, setShowReader] = useState(false);
+  const [showPdfReader, setShowPdfReader] = useState(false);
   const [starred, setStarred] = useState(book.UserBooks?.starred || false);
   // A missing (or dead) cover URL used to drop the whole cover box, which left those cards
   // shorter than their neighbours; a placeholder keeps every card in the grid the same size.
@@ -231,14 +233,17 @@ const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
           {book.status === 'available' && book.filePath && (
             <button onClick={(e) => { 
               e.stopPropagation(); 
-              if (book.bookType !== 'audiobook' && !book.filePath.toLowerCase().endsWith('.epub')) {
+              const path = book.filePath.toLowerCase();
+              const readable = book.bookType === 'audiobook' || path.endsWith('.epub') || path.endsWith('.pdf');
+              if (readable) {
+                if (book.bookType !== 'audiobook' && path.endsWith('.pdf')) setShowPdfReader(true);
+                else setShowReader(true);
+              } else {
                 const token = localStorage.getItem('token');
                 window.location.href = `/api/books/${book.id}/file?token=${encodeURIComponent(token || '')}`;
-              } else {
-                setShowReader(true);
               }
             }}>
-              {book.bookType === 'audiobook' ? '🎧 Play' : (!book.filePath.toLowerCase().endsWith('.epub') ? '⬇️ Download' : '📖 Read')}
+              {book.bookType === 'audiobook' ? '🎧 Play' : (book.filePath.toLowerCase().endsWith('.epub') || book.filePath.toLowerCase().endsWith('.pdf') ? '📖 Read' : '⬇️ Download')}
             </button>
           )}
         </div>
@@ -249,6 +254,13 @@ const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
           book={book}
           onClose={() => setShowReader(false)}
           // Starting the book files it under Favorites (Settings → General); show the star at once
+          onStarredChange={() => { setStarred(true); onUpdate?.(); }}
+        />
+      )}
+      {showPdfReader && (
+        <PdfReader
+          book={book}
+          onClose={() => setShowPdfReader(false)}
           onStarredChange={() => { setStarred(true); onUpdate?.(); }}
         />
       )}

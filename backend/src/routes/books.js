@@ -15,6 +15,7 @@ router.get('/continue-reading', bookController.getContinueReading);
 router.get('/continue-listening', bookController.getContinueListening);
 // Dashboard "New Arrivals" (books whose file landed most recently)
 router.get('/recent-arrivals', bookController.getRecentArrivals);
+router.get('/duplicates', bookController.getDuplicates);
 router.get('/amazon/bestsellers', bookController.getAmazonBestsellers);
 router.get('/amazon/new-releases', bookController.getAmazonNewReleases);
 // Launches a (non-headless) browser on the server for up to 5 minutes
@@ -33,6 +34,7 @@ router.post('/:id/cancel-download', bookController.cancelDownload);
 router.post('/', bookController.create);
 router.post('/grab', bookController.grab);
 router.post('/add-series', bookController.addSeries);
+router.post('/merge-duplicates', bookController.mergeDuplicates);
 router.put('/:id', bookController.update);
 // Books are shared across all users; deleting one removes it for everyone
 router.delete('/:id', adminAuth, bookController.delete);

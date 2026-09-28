@@ -605,6 +605,90 @@ exports.getRecentArrivals = async (req, res) => {
   }
 };
 
+const normalizeTitle = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+// Books that share a normalised title + author and are not just an ebook+audiobook pair.
+// Each group is a list of the duplicate candidates (with enough fields to decide which to keep).
+exports.getDuplicates = async (req, res) => {
+  try {
+    const books = await Book.findAll({
+      include: [{ model: Author, as: 'author' }],
+      order: [['title', 'ASC']]
+    });
+
+    const groups = new Map();
+    for (const b of books) {
+      const authorKey = b.authorId || normalizeTitle(b.author?.name || '');
+      const key = `${normalizeTitle(b.title)}|${authorKey}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(b);
+    }
+
+    const result = [];
+    for (const list of groups.values()) {
+      if (list.length < 2) continue;
+      const types = new Set(list.map((b) => b.mediaType || b.bookType));
+      const withFile = list.filter((b) => b.filePath).length;
+      // One ebook + one audiobook (both on disk) is a legitimate pair, not a duplicate
+      if (list.length === 2 && types.size === 2 && withFile === 2) continue;
+
+      result.push(list.map((b) => ({
+        id: b.id,
+        title: b.title,
+        author: b.author?.name || null,
+        authorId: b.authorId,
+        status: b.status,
+        mediaType: b.mediaType || b.bookType,
+        bookType: b.bookType,
+        filePath: b.filePath,
+        coverUrl: b.coverUrl,
+        importedAt: b.importedAt
+      })));
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Fields a "keep best" merge fills on the surviving book when the losers have it and it doesn't
+const MERGE_FIELDS = ['subtitle', 'description', 'isbn10', 'isbn13', 'publishedDate', 'publisher', 'pageCount',
+  'language', 'coverUrl', 'series', 'seriesNumber', 'seriesPosition', 'genres', 'googleBooksId', 'goodreadsId',
+  'rating', 'ratingsCount', 'amazonAsin', 'amazonUrl', 'narrator', 'audioFormat', 'duration', 'chapters'];
+
+// Merge a group of duplicates: keep the best (a file, then "available", then the most metadata),
+// copy any missing metadata from the rest, and delete the losers.
+exports.mergeDuplicates = async (req, res) => {
+  try {
+    const { bookIds } = req.body || {};
+    if (!Array.isArray(bookIds) || bookIds.length < 2) {
+      return res.status(400).json({ error: 'Provide at least two book ids' });
+    }
+    const books = await Book.findAll({ where: { id: bookIds } });
+    if (books.length < 2) return res.status(400).json({ error: 'Books not found' });
+
+    const score = (b) => (b.filePath ? 100 : 0) + (b.status === 'available' ? 20 : 0)
+      + (b.coverUrl ? 5 : 0) + (b.description ? 3 : 0) + ((b.isbn13 || b.isbn10) ? 3 : 0) + (b.series ? 2 : 0);
+    books.sort((a, b) => score(b) - score(a));
+    const keep = books[0];
+    const rest = books.slice(1);
+
+    const patch = {};
+    for (const field of MERGE_FIELDS) {
+      if (keep[field] == null || keep[field] === '') {
+        const donor = rest.find((b) => b[field] != null && b[field] !== '');
+        if (donor) patch[field] = donor[field];
+      }
+    }
+    if (Object.keys(patch).length) await keep.update(patch);
+
+    await Book.destroy({ where: { id: rest.map((b) => b.id) } });
+    res.json({ message: `Merged ${books.length} books into "${keep.title}"`, kept: keep.id, removed: rest.map((b) => b.id) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.toggleStar = async (req, res) => {
   try {
     const book = await Book.findByPk(req.params.id);

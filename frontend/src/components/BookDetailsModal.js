@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './BookDetailsModal.css';
 import Reader from './Reader';
+import PdfReader from './PdfReader';
 import { bookAPI } from '../services/api';
 import { parseBookSeries } from '../utils/bookSeries';
 import { extractYear } from '../utils/dates';
 
 const BookDetailsModal = ({ book, onClose, onStarredChange }) => {
   const [showReader, setShowReader] = useState(false);
+  const [showPdfReader, setShowPdfReader] = useState(false);
   const [bookWithUserData, setBookWithUserData] = useState(book);
 
   useEffect(() => {
@@ -122,7 +124,7 @@ const BookDetailsModal = ({ book, onClose, onStarredChange }) => {
         
         <div className="book-details-actions">
           {book.status === 'available' && book.filePath && (
-            <button onClick={() => setShowReader(true)} className="read-btn">
+            <button onClick={() => (book.bookType !== 'audiobook' && book.filePath.toLowerCase().endsWith('.pdf') ? setShowPdfReader(true) : setShowReader(true))} className="read-btn">
               {book.bookType === 'audiobook' ? '▶️ Play' : '📖 Read'}
             </button>
           )}
@@ -134,6 +136,13 @@ const BookDetailsModal = ({ book, onClose, onStarredChange }) => {
       <Reader
         book={bookWithUserData}
         onClose={() => setShowReader(false)}
+        onStarredChange={onStarredChange}
+      />
+    )}
+    {showPdfReader && (
+      <PdfReader
+        book={bookWithUserData}
+        onClose={() => setShowPdfReader(false)}
         onStarredChange={onStarredChange}
       />
     )}

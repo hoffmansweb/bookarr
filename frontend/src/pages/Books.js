@@ -7,6 +7,7 @@ import BookModal from '../components/BookModal';
 import AuthorModal from '../components/AuthorModal';
 import SearchBar from '../components/SearchBar';
 import BookSearchModal from '../components/BookSearchModal';
+import DuplicatesModal from '../components/DuplicatesModal';
 import './Books.css';
 
 const Books = () => {
@@ -23,6 +24,7 @@ const Books = () => {
   const [selectedBooks, setSelectedBooks] = useState([]);
   const [bulkMode, setBulkMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -211,6 +213,7 @@ const Books = () => {
         <div className="header-actions">
           <SearchBar onSearch={handleSearch} placeholder="Search library..." />
           <button onClick={() => setShowAddModal(true)}>+ Add Book</button>
+          <button onClick={() => setShowDuplicates(true)}>Duplicates</button>
           <button onClick={() => setBulkMode(!bulkMode)}>
             {bulkMode ? 'Cancel' : 'Bulk Edit'}
           </button>
@@ -293,6 +296,9 @@ const Books = () => {
       )}
       {showAddModal && (
         <BookSearchModal onClose={() => setShowAddModal(false)} onAdded={loadBooks} />
+      )}
+      {showDuplicates && (
+        <DuplicatesModal onClose={() => setShowDuplicates(false)} onChanged={loadBooks} />
       )}
     </div>
   );

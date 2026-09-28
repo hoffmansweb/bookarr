@@ -1,0 +1,105 @@
+.pdf-reader-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #0f1419;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-reader-container .reader-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #38444d;
+}
+
+.pdf-reader-container .reader-header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-reader-container .reader-close {
+  flex: 0 0 auto;
+  background: transparent;
+  color: #8b98a5;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.pdf-controls {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-bottom: 1px solid #38444d;
+  background: #192734;
+}
+
+.pdf-controls button,
+.pdf-controls select {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.pdf-controls select {
+  width: auto;
+}
+
+.pdf-page-indicator {
+  color: #e1e8ed;
+  font-size: 0.9rem;
+  min-width: 80px;
+  text-align: center;
+}
+
+.pdf-speak-btn {
+  background: #00ba7c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pdf-speak-btn.speaking {
+  background: #f91880;
+}
+
+.pdf-canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  background: #0a0d11;
+}
+
+.pdf-canvas-wrap canvas {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+}
+
+.reader-loading {
+  color: #8b98a5;
+  padding: 40px;
+}
+
+.error-message {
+  color: #ff8a80;
+  padding: 20px;
+}

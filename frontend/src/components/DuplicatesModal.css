@@ -1,0 +1,155 @@
+.duplicates-modal {
+  max-width: 900px;
+  width: 90vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.duplicates-modal .modal-header {
+  flex: 0 0 auto;
+  padding-right: 60px;
+}
+
+.duplicates-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 30px 24px;
+}
+
+.loading-inline {
+  color: #8b98a5;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.dupe-group {
+  background: #0f1419;
+  border: 1px solid #38444d;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.dupe-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dupe-group-head strong {
+  color: #e1e8ed;
+  font-size: 1.05rem;
+}
+
+.dupe-group-author {
+  color: #8b98a5;
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.merge-btn {
+  background: #192734;
+  color: #1d9bf0;
+  border: 1px solid #1d9bf0;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.merge-btn:hover:not(:disabled) {
+  background: #1d9bf0;
+  color: white;
+}
+
+.dupe-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #192734;
+}
+
+.dupe-cover {
+  width: 34px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #192734;
+}
+
+.dupe-cover-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38444d;
+  font-size: 1.1rem;
+}
+
+.dupe-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dupe-status {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
+  white-space: nowrap;
+  color: #8b98a5;
+  background: #192734;
+  border: 1px solid #38444d;
+}
+
+.dupe-status.status-available { color: #00ba7c; border-color: #00ba7c; }
+.dupe-status.status-wanted { color: #ffd700; border-color: #ffd700; }
+.dupe-status.status-ignored { color: #536471; border-color: #536471; }
+
+.dupe-type {
+  color: #8b98a5;
+  font-size: 0.8rem;
+}
+
+.dupe-path {
+  color: #536471;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.dupe-item .delete-btn {
+  background: #3a1f24;
+  color: #ff8a80;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dupe-item .delete-btn:hover:not(:disabled) {
+  background: #5c2b33;
+}
+
+@media (max-width: 768px) {
+  .duplicates-modal {
+    width: 100%;
+    max-width: none;
+  }
+
+  .duplicates-body {
+    padding: 12px 15px;
+  }
+
+  .dupe-path {
+    display: none;
+  }
+}
