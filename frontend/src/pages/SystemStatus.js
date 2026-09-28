@@ -227,12 +227,6 @@ const SystemStatus = ({ embedded = false }) => {
         >
           Logs
         </button>
-                <button 
-          className={`tab-btn ${activeSubTab === 'about' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('about')}
-        >
-          About
-        </button>
         <button 
           className={`tab-btn ${activeSubTab === 'backup' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('backup')}
@@ -304,6 +298,23 @@ const SystemStatus = ({ embedded = false }) => {
                 <div className="status-item">
                   <span>Heap Used:</span>
                   <strong>{formatBytes(statusData.processMemory.heapUsed)}</strong>
+                </div>
+              </div>
+
+              <div className="status-card glass-panel">
+                <h3>About</h3>
+                <div className="status-item">
+                  <span>Version:</span>
+                  <strong>{statusData.system.version || 'Unknown'}{statusData.system.commit ? ` (${statusData.system.commit.slice(0, 7)})` : ''}</strong>
+                </div>
+                <div className="status-item">
+                  <span>Node.js:</span>
+                  <strong>{statusData.system.nodeVersion}</strong>
+                </div>
+                <div style={{ marginTop: '14px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <a href="https://github.com/hoffmansweb/bookarr" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none', fontSize: '0.85rem' }}>📦 GitHub</a>
+                  <a href="https://github.com/hoffmansweb/bookarr/issues" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none', fontSize: '0.85rem' }}>🐛 Report Bug</a>
+                  <a href="https://github.com/hoffmansweb/bookarr/discussions" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none', fontSize: '0.85rem' }}>💬 Discussions</a>
                 </div>
               </div>
             </div>
@@ -420,40 +431,6 @@ const SystemStatus = ({ embedded = false }) => {
                 </div>
                 {restoreError && <div className="restore-error">{restoreError}</div>}
                 {restoreWarnings.map((warning) => <div className="restore-warning" key={warning}>{warning}</div>)}
-              </div>
-            </div>
-          )}
-
-          {activeSubTab === 'about' && (
-            <div className="about-container glass-panel" style={{ padding: '30px', textAlign: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-                <img src="/logo192.png" alt="Bookarr Logo" width="120" style={{ borderRadius: '24px', marginBottom: '10px' }} />
-                <h2 style={{ fontSize: '2em', margin: 0 }}>Bookarr</h2>
-                <p style={{ fontSize: '1.2em', color: '#ccc', maxWidth: '500px', lineHeight: '1.5' }}>
-                  The ultimate self-hosted Ebook and Audiobook Library Manager.
-                </p>
-                <div style={{ marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <a href="https://github.com/hoffmansweb/bookarr" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>📦 GitHub Repository</a>
-                  <a href="https://github.com/hoffmansweb/bookarr/issues" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>🐛 Report a Bug</a>
-                  <a href="https://github.com/hoffmansweb/bookarr/discussions" target="_blank" rel="noopener noreferrer" className="s-btn" style={{ textDecoration: 'none' }}>💬 Discussions</a>
-                </div>
-                <div style={{ marginTop: '40px', padding: '20px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '12px', width: '100%', maxWidth: '400px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ color: '#888' }}>Version</span>
-                    <strong>{statusData?.system?.version || 'Unknown'}</strong>
-                  </div>
-                  {statusData?.system?.commit && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <span style={{ color: '#888' }}>Build</span>
-                      <strong>{statusData.system.commit.slice(0, 7)}</strong>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#888' }}>Node.js</span>
-                    <strong>{statusData?.system?.nodeVersion || 'Unknown'}</strong>
-                  </div>
-                </div>
-                <p style={{ marginTop: '20px', color: '#666', fontSize: '0.9em' }}>Developed with ❤️ by the Bookarr community.</p>
               </div>
             </div>
           )}
