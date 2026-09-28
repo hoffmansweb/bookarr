@@ -668,6 +668,30 @@
   align-items: flex-end;
 }
 
+/* "In library" indicator: the book has a real file on disk */
+.book-item-center .in-library-badge {
+  color: #00ba7c;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.book-item-right .book-delete-btn {
+  background: #3a1f24;
+  color: #ff8a80;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.book-item-right .book-delete-btn:hover {
+  background: #5c2b33;
+}
+
 .spin-icon {
   display: inline-block;
   animation: spin 1.5s linear infinite;

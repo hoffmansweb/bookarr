@@ -266,6 +266,19 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
     }
   };
 
+  const handleDeleteBook = async (book, e) => {
+    e.stopPropagation();
+    if (!window.confirm(`Delete "${book.title}"? This removes it for everyone.`)) return;
+    try {
+      await bookAPI.delete(book.id);
+      toast.success(`Deleted "${book.title}"`);
+      setLocalAuthor(prev => ({ ...prev, books: (prev.books || []).filter(b => b.id !== book.id) }));
+      onUpdate();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete book');
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content author-modal" onClick={(e) => e.stopPropagation()}>
@@ -339,6 +352,9 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
                   <div className="book-item-center" onClick={() => setDetailsBook(book)} style={{cursor: 'pointer'}}>
                     <strong>{book.title}</strong>
                     <span>📅 {extractYear(book.publishedDate) || 'Unknown'}</span>
+                    {book.filePath && (
+                      <span className="in-library-badge" title="This book is downloaded and in your library">✅ In library</span>
+                    )}
                     {series && (
                       <span
                         className="book-series"
@@ -392,6 +408,9 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
                           ) : 'Search'}
                         </button>
                       </div>
+                    )}
+                    {user?.role === 'admin' && (
+                      <button className="book-delete-btn" onClick={(e) => handleDeleteBook(book, e)} title="Delete book">✕</button>
                     )}
                   </div>
                 </div>
