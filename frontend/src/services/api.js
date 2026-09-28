@@ -167,7 +167,9 @@ export const PIPELINE_TYPES = ['youtube', 'web', 'librivox', 'archive'];
 
 export const jobsAPI = {
   list: () => api.get('/jobs'),
-  run: (id) => api.post(`/jobs/${id}/run`, null, { timeout: 0 }),
+  // An empty body must be an object, not null: with the application/json default, axios turns
+  // null into the literal string "null", which body-parser's strict JSON mode rejects (500).
+  run: (id) => api.post(`/jobs/${id}/run`, {}, { timeout: 0 }),
   runMonitoring: () => api.post('/jobs/monitoring'),
   runSearch: () => api.post('/jobs/search'),
   runDownloadCheck: () => api.post('/jobs/download-check'),
