@@ -4,7 +4,7 @@ import { ttsAPI, authAPI } from '../../../services/api';
 import { Card, Field, TextInput, Select, Grid } from '../ui';
 
 const PROVIDERS = [
-  { value: 'openai-compatible', label: 'Local / OpenAI-compatible (Kokoro)' },
+  { value: 'openai-compatible', label: 'OpenAI-compatible (Kokoro / external)' },
   { value: 'google', label: 'Google Cloud TTS' },
   { value: 'openai', label: 'OpenAI TTS' },
   { value: 'elevenlabs', label: 'ElevenLabs' }
@@ -49,9 +49,9 @@ const TtsSection = ({ settings, set, saveNow }) => {
 
   return (
     <>
-      <Card title="Local TTS server" description="Any OpenAI-compatible speech server (Kokoro-FastAPI, openedai-speech, LocalAI). Its voices appear in the reader for every user while it's reachable.">
+      <Card title="TTS server (OpenAI-compatible)" description="Any OpenAI-compatible speech server: Kokoro-FastAPI, openedai-speech, LocalAI, or a hosted endpoint like https://api.free.ai/v1/tts. Its voices appear in the reader for every user while it's reachable.">
         <Grid>
-          <Field label="Server URL" wide>
+          <Field label="Server URL" wide help="A host, a /v1 base, or a full speech endpoint such as https://api.free.ai/v1/tts.">
             <TextInput value={settings.tts_openai_base_url} onChange={(v) => set('tts_openai_base_url', v)} placeholder="http://192.168.1.75:8880/v1" />
           </Field>
           <Field label="Model"><TextInput value={settings.tts_openai_model} onChange={(v) => set('tts_openai_model', v)} placeholder="kokoro" /></Field>

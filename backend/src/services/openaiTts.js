@@ -10,19 +10,29 @@ const { getSetting } = require('../controllers/settingsController');
 
 const KOKORO_FALLBACK_VOICES = ['af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'am_adam', 'am_michael', 'am_fenrir', 'bf_emma', 'bf_isabella', 'bm_george', 'bm_lewis'];
 
+// The configured URL can be a bare host ("http://host:8880"), a versioned base
+// ("http://host:8880/v1"), or a full speech endpoint ("https://api.free.ai/v1/tts"). Normalise it
+// into the two URLs the client needs: where to POST audio and where to list voices.
 const getConfig = async () => {
-  let baseUrl = (await getSetting('tts_openai_base_url')) || '';
-  baseUrl = baseUrl.trim().replace(/\/+$/, '');
-  if (baseUrl && !/\/v1$/.test(baseUrl)) baseUrl += '/v1';
+  const raw = (await getSetting('tts_openai_base_url')) || '';
+  let root = raw.trim().replace(/\/+$/, '');
+  let speechUrl = '';
+  let voicesUrl = '';
+  if (root) {
+    if (!/\/v\d+$/i.test(root) && !/\/(tts|audio\/speech)$/i.test(root)) root += '/v1';
+    speechUrl = /\/(tts|audio\/speech)$/i.test(root) ? root : `${root}/audio/speech`;
+    voicesUrl = `${root.replace(/\/(tts|audio\/speech)$/i, '')}/audio/voices`;
+  }
   return {
-    baseUrl,
+    speechUrl,
+    voicesUrl,
     model: (await getSetting('tts_openai_model')) || 'kokoro',
     voice: (await getSetting('tts_openai_voice')) || 'af_heart',
     apiKey: (await getSetting('tts_openai_api_key')) || 'not-needed'
   };
 };
 
-const isConfigured = async () => !!(await getConfig()).baseUrl;
+const isConfigured = async () => !!(await getConfig()).speechUrl;
 
 /**
  * Synthesize `text` to an mp3 file.
@@ -30,9 +40,9 @@ const isConfigured = async () => !!(await getConfig()).baseUrl;
  */
 const speak = async (text, outPath, { voice, speed = 1, model, signal } = {}) => {
   const cfg = await getConfig();
-  if (!cfg.baseUrl) throw new Error('OpenAI-compatible TTS server not configured (Settings > Text-to-Speech)');
+  if (!cfg.speechUrl) throw new Error('OpenAI-compatible TTS server not configured (Settings > Text-to-Speech)');
 
-  const { data } = await axios.post(`${cfg.baseUrl}/audio/speech`, {
+  const { data } = await axios.post(cfg.speechUrl, {
     model: model || cfg.model,
     input: text,
     voice: voice || cfg.voice,
@@ -62,20 +72,20 @@ const gradeRank = (g) => (g ? 'ABCDEF'.indexOf(g[0]) * 3 + (g[1] === '+' ? 0 : g
  */
 const listVoices = async () => {
   const cfg = await getConfig();
-  if (!cfg.baseUrl) return [];
+  if (!cfg.speechUrl) return [];
   const ttl = voiceCache.voices.length ? 10 * 60 * 1000 : 60 * 1000;
-  if (Date.now() - voiceCache.at < ttl && voiceCache.baseUrl === cfg.baseUrl) return voiceCache.voices;
+  if (Date.now() - voiceCache.at < ttl && voiceCache.key === cfg.voicesUrl) return voiceCache.voices;
   try {
-    const { data } = await axios.get(`${cfg.baseUrl}/audio/voices`, { headers: { Authorization: `Bearer ${cfg.apiKey}` }, timeout: 5000 });
+    const { data } = await axios.get(cfg.voicesUrl, { headers: { Authorization: `Bearer ${cfg.apiKey}` }, timeout: 5000 });
     const raw = Array.isArray(data) ? data : data.voices || [];
     raw.forEach(v => { if (v && typeof v === 'object' && v.id) voiceGrades.set(v.id, v.overall_grade || null); });
     let voices = raw.map(v => (typeof v === 'string' ? v : v.id || v.name)).filter(Boolean);
     // Server answered but has no voice listing endpoint content: assume the stock Kokoro set
     if (!voices.length) voices = cfg.model === 'kokoro' ? KOKORO_FALLBACK_VOICES : [cfg.voice];
     voices.sort((a, b) => gradeRank(voiceGrades.get(a)) - gradeRank(voiceGrades.get(b)) || a.localeCompare(b));
-    voiceCache = { at: Date.now(), baseUrl: cfg.baseUrl, voices };
+    voiceCache = { at: Date.now(), key: cfg.voicesUrl, voices };
   } catch (e) {
-    voiceCache = { at: Date.now(), baseUrl: cfg.baseUrl, voices: [] };
+    voiceCache = { at: Date.now(), key: cfg.voicesUrl, voices: [] };
   }
   return voiceCache.voices;
 };
