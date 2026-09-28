@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notificationAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
@@ -8,6 +8,7 @@ import './Navbar.css';
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -93,7 +94,16 @@ const Navbar = () => {
     }
   };
 
+  const navItems = [
+    { to: '/', label: 'Home', icon: '🏠' },
+    { to: '/books', label: 'Library', icon: '📚' },
+    { to: '/authors', label: 'Authors', icon: '✍️' },
+    { to: '/activity', label: 'Activity', icon: '⏱️' },
+    ...(user?.role === 'admin' ? [{ to: '/settings', label: 'Settings', icon: '⚙️' }] : [])
+  ];
+
   return (
+    <>
     <nav className="navbar" ref={navRef}>
       <div className="nav-brand">
         <Link to="/">Bookarr</Link>
@@ -178,6 +188,24 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
+
+    <nav className="bottom-nav" aria-label="Primary">
+      {navItems.map((item) => {
+        const active = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={`bottom-nav-item${active ? ' active' : ''}`}
+            onClick={() => setMenuOpen(false)}
+          >
+            <span className="bottom-nav-icon">{item.icon}</span>
+            <span className="bottom-nav-label">{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+    </>
   );
 };
 

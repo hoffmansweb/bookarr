@@ -262,3 +262,35 @@
     width: 100%;
   }
 }
+
+/* ---- Floating Add Book button (mobile first) ---- */
+.fab {
+  display: none;
+}
+
+@media (max-width: 768px), (max-height: 480px) {
+  .fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 16px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1d9bf0;
+    color: white;
+    font-size: 1.9rem;
+    line-height: 1;
+    box-shadow: 0 4px 16px rgba(29, 155, 240, 0.45);
+    z-index: 900;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fab:hover {
+    background: #1a8cd8;
+  }
+}

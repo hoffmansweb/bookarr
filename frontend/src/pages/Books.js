@@ -306,6 +306,10 @@ const Books = () => {
       {showDuplicates && (
         <DuplicatesModal onClose={() => setShowDuplicates(false)} onChanged={loadBooks} />
       )}
+
+      {user?.role === 'admin' && (
+        <button className="fab" onClick={() => setShowAddModal(true)} title="Add book" aria-label="Add book">＋</button>
+      )}
     </div>
   );
 };

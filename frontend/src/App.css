@@ -56,7 +56,8 @@ input[type="checkbox"], input[type="radio"] {
   .main-content {
     padding: 15px;
     padding-top: calc(76px + env(safe-area-inset-top));
-    padding-bottom: calc(15px + env(safe-area-inset-bottom));
+    /* clear the fixed bottom tab bar (56px) plus a little breathing room */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 }
 

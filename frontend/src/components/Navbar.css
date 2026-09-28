@@ -42,8 +42,9 @@
     padding-top: calc(10px + env(safe-area-inset-top));
   }
 
+  /* The bottom tab bar replaces the hamburger drawer on phones */
   .nav-toggle {
-    display: block;
+    display: none;
   }
 
   .nav-actions {
@@ -328,6 +329,48 @@
 
 .user-dropdown-items button:hover {
   background: #38444d;
+}
+
+/* ---- Bottom tab bar (mobile first) ---- */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px), (max-height: 480px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background: #192734;
+    border-top: 1px solid #38444d;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+    min-height: 56px;
+    text-decoration: none;
+    color: #8b98a5;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 0.68rem;
+  }
+
+  .bottom-nav-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .bottom-nav-item.active {
+    color: #1d9bf0;
+  }
 }
 
 
