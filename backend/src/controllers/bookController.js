@@ -577,10 +577,13 @@ exports.getRecentArrivals = async (req, res) => {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 50);
     const days = parseInt(req.query.days, 10);
 
+    // New Arrivals = books whose file actually landed. A catalogue entry with no downloaded
+    // file yet (wanted/downloading, blank cover) must never show up here, so require a filePath.
+    const hasFile = { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] };
     // ?days=30 limits the row to the last month; without it every arrival is eligible
     const where = Number.isInteger(days) && days > 0
-      ? { importedAt: { [Op.gte]: new Date(Date.now() - days * 24 * 60 * 60 * 1000) } }
-      : { importedAt: { [Op.ne]: null } };
+      ? { filePath: hasFile, importedAt: { [Op.gte]: new Date(Date.now() - days * 24 * 60 * 60 * 1000) } }
+      : { filePath: hasFile, importedAt: { [Op.ne]: null } };
 
     const books = await Book.findAll({
       where,
