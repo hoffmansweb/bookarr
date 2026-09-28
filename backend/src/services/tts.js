@@ -35,8 +35,14 @@ async function getAvailableVoices() {
   try {
     // Empty while the server is down, so users only see voices that can play
     const openaiTts = require('./openaiTts');
+    const externalTts = require('./externalTts');
     const local = (await openaiTts.listVoices()).map(v => ({ id: LOCAL_PREFIX + v, label: `🏠 Kokoro: ${openaiTts.describeVoice(v)}`, local: true }));
-    return [...local, ...VOICES];
+    // External (non-OpenAI) TTS: a single voice entry configured in Settings, prefixed "ext:"
+    const extCfg = await externalTts.getConfig();
+    const external = extCfg.baseUrl
+      ? [{ id: `ext:${extCfg.voice}`, label: `🌐 External (${extCfg.model}): ${extCfg.voice}`, local: false }]
+      : [];
+    return [...local, ...external, ...VOICES];
   } catch (e) {
     return VOICES;
   }
@@ -58,6 +64,18 @@ async function synthesize(text, voiceId = 'en-US-AriaNeural', speed = 1, { signa
       // (separate call so the Edge audio is cached under its own key, not the Kokoro voice's)
       if (signal?.aborted) throw e; // listener gone: don't bother with the Edge fallback
       console.warn(`Local TTS failed (${e.message}); falling back to Edge TTS`);
+      return synthesize(text, 'en-US-AriaNeural', speed);
+    }
+  }
+
+  // External (non-OpenAI) TTS, e.g. https://api.free.ai/v1/tts
+  if (String(voiceId).startsWith('ext:')) {
+    const externalTts = require('./externalTts');
+    try {
+      return await externalTts.speak(text, mp3File, { voice: voiceId.slice('ext:'.length), signal });
+    } catch (e) {
+      if (signal?.aborted) throw e;
+      console.warn(`External TTS failed (${e.message}); falling back to Edge TTS`);
       return synthesize(text, 'en-US-AriaNeural', speed);
     }
   }

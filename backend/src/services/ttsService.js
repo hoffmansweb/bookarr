@@ -32,6 +32,8 @@ class TTSService {
       case 'openai-compatible':
       case 'kokoro':
         return await this.openAICompatibleTTS(text, outputPath, options);
+      case 'external':
+        return await this.externalTTS(text, outputPath, options);
       case 'elevenlabs':
         return await this.elevenLabsTTS(text, outputPath, options);
       case 'openai':
@@ -120,13 +122,16 @@ class TTSService {
    */
   async resolveProvider(requested, voiceName) {
     const openaiTts = require('./openaiTts');
+    const externalTts = require('./externalTts');
     if (String(voiceName || '').startsWith('oai:')) return 'openai-compatible';
+    if (String(voiceName || '').startsWith('ext:')) return 'external';
     const configured = {
       google: this.hasGoogle,
       openai: this.hasOpenAI,
       elevenlabs: this.hasElevenLabs,
       'openai-compatible': await openaiTts.isConfigured(),
-      kokoro: await openaiTts.isConfigured()
+      kokoro: await openaiTts.isConfigured(),
+      external: await externalTts.isConfigured()
     };
     if (requested && configured[requested]) return requested;
     if (await openaiTts.isAvailable()) return 'openai-compatible';
@@ -143,6 +148,19 @@ class TTSService {
     } catch (error) {
       const detail = error.response ? `HTTP ${error.response.status}` : error.message;
       logger.error(`OpenAI-compatible TTS error: ${detail}`);
+      return { success: false, error: detail };
+    }
+  }
+
+  async externalTTS(text, outputPath, options = {}) {
+    const externalTts = require('./externalTts');
+    try {
+      const voice = String(options.voiceName || '').replace(/^ext:/, '') || undefined;
+      await externalTts.speak(text, outputPath, { voice });
+      return { success: true, path: outputPath };
+    } catch (error) {
+      const detail = error.response ? `HTTP ${error.response.status}` : error.message;
+      logger.error(`External TTS error: ${detail}`);
       return { success: false, error: detail };
     }
   }
@@ -221,6 +239,11 @@ class TTSService {
     if (provider === 'openai-compatible' || provider === 'kokoro') {
       const openaiTts = require('./openaiTts');
       return (await openaiTts.listVoices()).map(id => ({ id, name: openaiTts.describeVoice(id) }));
+    }
+    if (provider === 'external') {
+      const externalTts = require('./externalTts');
+      const cfg = await externalTts.getConfig();
+      return cfg.baseUrl ? [{ id: cfg.voice, name: `External (${cfg.model}): ${cfg.voice}` }] : [];
     }
 
     const voices = {
