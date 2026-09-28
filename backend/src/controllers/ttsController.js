@@ -6,6 +6,7 @@ const { Book, Author } = require('../models');
 const downloadQueue = require('../utils/downloadQueue');
 const { getLibraryFolder, emit, notifyAudiobookshelf } = require('../services/libraryImport');
 const { sanitizeFileName } = require('../utils/httpDownloader');
+const { getSetting } = require('./settingsController');
 const logger = require('../config/logger');
 
 exports.enqueueNarration = async (bookId, overrideOptions = {}) => {
