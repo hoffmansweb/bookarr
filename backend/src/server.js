@@ -107,7 +107,7 @@ app.use('/api/opds', require('./routes/opds'));
 
 app.get('/api/health', (req, res) => {
   const version = process.env.BOOKARR_VERSION || require('../package.json').version || '1.0.0';
-  res.json({ status: 'ok', version, timestamp: new Date() });
+  res.json({ status: 'ok', version, commit: process.env.BOOKARR_COMMIT || '', timestamp: new Date() });
 });
 
 // Serve the web app: backend/public in Docker, otherwise the local frontend build

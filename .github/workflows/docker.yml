@@ -60,8 +60,10 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BOOKARR_VERSION=${{ github.ref_name }}
+            BOOKARR_COMMIT=${{ github.sha }}
 

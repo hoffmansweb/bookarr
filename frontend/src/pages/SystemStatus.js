@@ -359,7 +359,7 @@ const SystemStatus = ({ embedded = false }) => {
                 </div>
                 
                 <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                  <p style={{ margin: '0 0 10px 0', color: '#ccc' }}><strong>Current Version:</strong> {statusData?.system?.version || 'Unknown'}</p>
+                  <p style={{ margin: '0 0 10px 0', color: '#ccc' }}><strong>Current Version:</strong> {statusData?.system?.version || 'Unknown'}{statusData?.system?.commit ? ` (${statusData.system.commit.slice(0, 7)})` : ''}</p>
                   
                   {updateInfo ? (
                     <div>
@@ -442,6 +442,12 @@ const SystemStatus = ({ embedded = false }) => {
                     <span style={{ color: '#888' }}>Version</span>
                     <strong>{statusData?.system?.version || 'Unknown'}</strong>
                   </div>
+                  {statusData?.system?.commit && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <span style={{ color: '#888' }}>Build</span>
+                      <strong>{statusData.system.commit.slice(0, 7)}</strong>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#888' }}>Node.js</span>
                     <strong>{statusData?.system?.nodeVersion || 'Unknown'}</strong>

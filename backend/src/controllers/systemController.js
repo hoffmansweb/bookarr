@@ -103,6 +103,7 @@ exports.getStatus = async (req, res) => {
       uptime: process.uptime(),
       nodeVersion: process.version,
       version: APP_VERSION,
+      commit: process.env.BOOKARR_COMMIT || '',
       dbStatus: dbConnected ? 'connected' : 'disconnected'
     };
 

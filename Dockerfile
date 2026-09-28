@@ -56,7 +56,9 @@ RUN apt-get update \
  && /opt/venv/bin/pip install --no-cache-dir edge-tts "yt-dlp[default]"
 
 ARG BOOKARR_VERSION="develop"
+ARG BOOKARR_COMMIT=""
 ENV BOOKARR_VERSION=${BOOKARR_VERSION} \
+    BOOKARR_COMMIT=${BOOKARR_COMMIT} \
     NODE_ENV=production \
     PORT=5000 \
     PATH=/opt/venv/bin:$PATH \
