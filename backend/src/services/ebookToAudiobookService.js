@@ -4,6 +4,9 @@ const fs = require('fs');
 const ttsService = require('./ttsService');
 const logger = require('../config/logger');
 
+// Front matter that should never be narrated: cover/copyright/title/TOC/dedication etc.
+const FRONT_MATTER_RE = /^(copyright|title\s*page|table\s*of\s*contents|contents|dedication|acknowledg?ments?|about\s*the\s*(author|book)|also\s*by|other\s*(books|works)\s*by|books?\s*by|praise\s*for|preface|foreword|newsletter|advert|glossary|synopsis|half[\s-]?title|title\s*verso)$/i;
+
 class EbookToAudiobookService {
   /**
    * Narrate an EPUB into a chaptered .m4b.
@@ -109,9 +112,13 @@ class EbookToAudiobookService {
             const content = await this.getChapterContent(epub, item.id);
             
             if (content && content.trim().length > 100) {
+              const title = item.title || '';
+              // Skip cover/copyright/TOC/dedication and other front matter so narration
+              // starts at the first real chapter instead of "Copyright".
+              if (title && FRONT_MATTER_RE.test(title.trim())) continue;
               chapters.push({
                 id: item.id,
-                title: item.title || `Chapter ${chapters.length + 1}`,
+                title: title || `Chapter ${chapters.length + 1}`,
                 content: this.cleanText(content)
               });
             }

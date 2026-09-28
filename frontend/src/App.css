@@ -194,6 +194,20 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   color: white;
 }
 
+/* Phone: keep the filter row in reach while the list scrolls */
+@media (max-width: 768px), (max-height: 480px) {
+  .filters {
+    position: sticky;
+    top: calc(56px + env(safe-area-inset-top));
+    z-index: 40;
+    background: #0f1419;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+}
+
 /* Touch screens: controls need a 44px hit area (Apple/Google guidance) and :hover sticks
    after a tap, so a tapped filter used to stay highlighted until you tapped elsewhere.
    The (max-height) clause picks up landscape phones, which are wider than 768px. */

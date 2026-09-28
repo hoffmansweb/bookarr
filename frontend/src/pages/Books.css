@@ -263,6 +263,19 @@
   }
 }
 
+/* Phone: keep filters in reach while the grid scrolls */
+@media (max-width: 768px), (max-height: 480px) {
+  .books-page .filters {
+    position: sticky;
+    top: calc(56px + env(safe-area-inset-top));
+    z-index: 40;
+    background: #0f1419;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+}
+
 /* ---- Floating Add Book button (mobile first) ---- */
 .fab {
   display: none;
