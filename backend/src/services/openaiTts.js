@@ -116,7 +116,7 @@ const describeVoice = (id) => {
 /** Quick connectivity check for the settings page. */
 const test = async () => {
   const cfg = await getConfig();
-  if (!cfg.baseUrl) return { success: false, error: 'No server URL configured' };
+  if (!cfg.speechUrl) return { success: false, error: 'No server URL configured' };
   const os = require('os');
   const path = require('path');
   const tmp = path.join(os.tmpdir(), `bookarr-tts-test-${Date.now()}.mp3`);
