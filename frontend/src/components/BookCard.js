@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Reader from './Reader';
 import DownloadProgress from './DownloadProgress';
 import { useSocket } from '../context/SocketContext';
+import { extractYear } from '../utils/dates';
 import './BookCard.css';
 
 const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
@@ -180,7 +181,7 @@ const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
           </p>
         )}
         {book.narrator && <p className="narrator">🎙️ {book.narrator}</p>}
-        {book.publishedDate && <p className="date">{new Date(book.publishedDate).getFullYear()}</p>}
+        {extractYear(book.publishedDate) && <p className="date">{extractYear(book.publishedDate)}</p>}
         {book.bookType === 'audiobook' && book.duration && <p className="duration">⏱️ {Math.floor(book.duration / 60)}h {book.duration % 60}m</p>}
         {book.bookType !== 'audiobook' && book.pageCount && <p className="pages">📄 {book.pageCount} pages</p>}
         {book.rating && <p className="rating">⭐ {book.rating.toFixed(1)}</p>}

@@ -3,6 +3,7 @@ import './BookDetailsModal.css';
 import Reader from './Reader';
 import { bookAPI } from '../services/api';
 import { parseBookSeries } from '../utils/bookSeries';
+import { extractYear } from '../utils/dates';
 
 const BookDetailsModal = ({ book, onClose, onStarredChange }) => {
   const [showReader, setShowReader] = useState(false);
@@ -44,7 +45,7 @@ const BookDetailsModal = ({ book, onClose, onStarredChange }) => {
           {book.publishedDate && (
             <div className="detail-row">
               <strong>Published:</strong>
-              <span>{/^\d{4}$/.test(book.publishedDate) || isNaN(new Date(book.publishedDate)) ? book.publishedDate : new Date(book.publishedDate).toLocaleDateString()}</span>
+              <span>{extractYear(book.publishedDate) || book.publishedDate || 'Unknown'}</span>
             </div>
           )}
 

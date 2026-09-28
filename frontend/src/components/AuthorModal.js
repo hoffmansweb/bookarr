@@ -7,6 +7,7 @@ import SearchResultsModal from './SearchResultsModal';
 import BookDetailsModal from './BookDetailsModal';
 import Reader from './Reader';
 import { parseBookSeries } from '../utils/bookSeries';
+import { extractYear } from '../utils/dates';
 import './AuthorModal.css';
 
 // Formats searched by "Search all wanted" come from Settings → General ("When I click Get, look for")
@@ -333,7 +334,7 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
                   {book.coverUrl && <img src={book.coverUrl} alt={book.title} onClick={() => setDetailsBook(book)} style={{cursor: 'pointer'}} />}
                   <div className="book-item-center" onClick={() => setDetailsBook(book)} style={{cursor: 'pointer'}}>
                     <strong>{book.title}</strong>
-                    <span>📅 {book.publishedDate ? (book.publishedDate.length === 4 ? book.publishedDate : book.publishedDate.substring(0, 4)) : 'Unknown'}</span>
+                    <span>📅 {extractYear(book.publishedDate) || 'Unknown'}</span>
                     {series && (
                       <span
                         className="book-series"
