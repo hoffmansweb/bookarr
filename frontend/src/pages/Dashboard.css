@@ -7,6 +7,104 @@
   margin-bottom: 40px;
 }
 
+/* ---- stats ---- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  background: #192734;
+  border: 1px solid #38444d;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #e1e8ed;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #8b98a5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- upcoming releases widget ---- */
+.releases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.release-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #192734;
+  border: 1px solid #38444d;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.release-cover {
+  width: 36px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.release-cover-placeholder {
+  width: 36px;
+  height: 50px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f1419;
+  font-size: 1.1rem;
+}
+
+.release-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.release-title {
+  color: #e1e8ed;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.release-meta {
+  color: #8b98a5;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.release-date {
+  color: #1d9bf0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .dashboard section h2 {
   margin-bottom: 20px;
   font-size: 1.5rem;

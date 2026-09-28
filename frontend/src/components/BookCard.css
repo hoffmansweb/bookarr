@@ -189,6 +189,22 @@
   margin: 5px 0;
 }
 
+.book-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: #0f1419;
+  border: 1px solid #38444d;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.book-progress-fill {
+  height: 100%;
+  background: #00ba7c;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
 /* A long author or narrator name used to wrap onto a second line and push everything below it
    further down the card, so two books in the same row no longer lined up. One clamped line each
    keeps every card's text block identical - the same trick the title above uses, and unlike

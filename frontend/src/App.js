@@ -9,6 +9,7 @@ import { SocketProvider } from './context/SocketContext';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import Navbar from './components/Navbar';
+import GlobalSearch from './components/GlobalSearch';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -16,7 +17,6 @@ import Dashboard from './pages/Dashboard';
 import Books from './pages/Books';
 import Authors from './pages/Authors';
 import Settings from './pages/Settings/Settings';
-import Calendar from './pages/Calendar';
 import Activity from './pages/Activity';
 
 import './App.css';
@@ -65,12 +65,12 @@ function App() {
                 <Route path="/*" element={
                   <PrivateRoute>
                     <Navbar />
+                    <GlobalSearch />
                     <main className="main-content">
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/books" element={<Books />} />
                         <Route path="/authors" element={<Authors />} />
-                        <Route path="/calendar" element={<Calendar />} />
                         <Route path="/activity" element={<Activity />} />
                         <Route path="/settings/:section?" element={<AdminRoute><Settings /></AdminRoute>} />
                         {/* System and Admin now live inside Settings; keep old links working */}

@@ -184,7 +184,13 @@ const BookCard = ({ book, onUpdate, onClick, onAuthorClick }) => {
         {book.bookType === 'audiobook' && book.duration && <p className="duration">⏱️ {Math.floor(book.duration / 60)}h {book.duration % 60}m</p>}
         {book.bookType !== 'audiobook' && book.pageCount && <p className="pages">📄 {book.pageCount} pages</p>}
         {book.rating && <p className="rating">⭐ {book.rating.toFixed(1)}</p>}
-        
+
+        {Number(book.UserBooks?.progress) > 0 && Number(book.UserBooks?.progress) < 100 && (
+          <div className="book-progress" title={`${Math.round(book.UserBooks.progress)}% complete`}>
+            <div className="book-progress-fill" style={{ width: `${book.UserBooks.progress}%` }} />
+          </div>
+        )}
+
         <div className="book-actions" onClick={(e) => e.stopPropagation()}>
           {user?.role === 'admin' && !book.id && (
             <button onClick={handleGrab} disabled={downloading || grabbed}>

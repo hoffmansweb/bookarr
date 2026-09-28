@@ -199,6 +199,10 @@ export const calendarAPI = {
   getEvents: (params) => api.get('/calendar', { params })
 };
 
+export const statsAPI = {
+  get: () => api.get('/stats')
+};
+
 export const systemAPI = {
   getStatus: () => api.get('/system/status'),
   getLogs: () => api.get('/system/logs'),

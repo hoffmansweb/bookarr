@@ -100,10 +100,9 @@ const Navbar = () => {
       </div>
       
       <div id="main-menu" className={`nav-links ${menuOpen ? 'open' : ''}`}>
-        <Link to="/" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-        <Link to="/calendar" onClick={() => setMenuOpen(false)}>Calendar</Link>
+        <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
+        <Link to="/books" onClick={() => setMenuOpen(false)}>Library</Link>
         <Link to="/authors" onClick={() => setMenuOpen(false)}>Authors</Link>
-        <Link to="/books" onClick={() => setMenuOpen(false)}>Books</Link>
         <Link to="/activity" onClick={() => setMenuOpen(false)}>Activity</Link>
         {user?.role === 'admin' && <Link to="/settings" onClick={() => setMenuOpen(false)}>Settings</Link>}
       </div>
