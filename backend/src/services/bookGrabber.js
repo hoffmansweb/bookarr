@@ -25,18 +25,21 @@ const findOrCreateAuthor = async (name) => {
   return existing || Author.create({ name: clean });
 };
 
-// Reuse an existing entry for this title/author/format instead of duplicating it
+// Reuse an existing entry for this title/author/format instead of duplicating it. The title is
+// compared case/leading-article/punctuation-insensitively, so "The Russian Cage" reuses an
+// existing "Russian Cage" instead of adding a second row.
 const findEntry = async (title, authorId, mediaType) => {
   const { Book } = require('../models');
-  return Book.findOne({
+  const { normalizeTitle } = require('../utils/titles');
+  const key = normalizeTitle(title);
+  if (!key) return null;
+  const candidates = await Book.findAll({
     where: {
-      [Op.and]: [
-        where(fn('lower', col('title')), String(title).toLowerCase()),
-        { authorId: authorId || null },
-        { [Op.or]: [{ mediaType }, ...(mediaType === 'ebook' ? [{ mediaType: null }] : [])] }
-      ]
+      authorId: authorId || null,
+      [Op.or]: [{ mediaType }, ...(mediaType === 'ebook' ? [{ mediaType: null }] : [])]
     }
   });
+  return candidates.find((b) => normalizeTitle(b.title) === key) || null;
 };
 
 // Metadata a book row carries; anything else (status, file, download ids...) is not copied

@@ -2,6 +2,7 @@ const { Author, Book, Notification, User } = require('../models');
 const aggregator = require('../services/aggregator');
 const logger = require('../config/logger');
 const { Op } = require('sequelize');
+const { normalizeTitle } = require('../utils/titles');
 
 class MonitoringJob {
   hasCompleteMetadata(book) {
@@ -45,15 +46,14 @@ class MonitoringJob {
       existingBooks.forEach(b => { if (b.isbn13) existingIsbns.add(b.isbn13); if (b.isbn10) existingIsbns.add(b.isbn10); });
       const existingGrIds = new Set(existingBooks.map(b => b.goodreadsId).filter(Boolean));
       // Most catalogue entries have no ISBN, so titles (minus series/subtitle noise) are the main key
-      const normTitle = (t) => (t || '').toLowerCase().replace(/(.*?)/g, '').replace(/[^a-z0-9]/g, '');
-      const existingTitles = new Set(existingBooks.map(b => normTitle(b.title)).filter(Boolean));
+      const existingTitles = new Set(existingBooks.map(b => normalizeTitle(b.title)).filter(Boolean));
       const normName = (n) => (n || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const authorKey = normName(author.name);
 
       const newBooks = [];
       for (const book of books) {
         const isbn = book.isbn13 || book.isbn10;
-        const titleKey = normTitle(book.title);
+        const titleKey = normalizeTitle(book.title);
         if (!titleKey) continue;
         if ((isbn && existingIsbns.has(isbn)) || (book.goodreadsId && existingGrIds.has(book.goodreadsId)) || existingTitles.has(titleKey)) continue;
         const credited = [book.author, ...(book.authors || [])].filter(Boolean);

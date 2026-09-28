@@ -4,6 +4,7 @@ const { Author, Book } = require('../models');
 const { getSetting } = require('./settingsController');
 const aggregator = require('../services/aggregator');
 const { Op } = require('sequelize');
+const { normalizeTitle } = require('../utils/titles');
 
 exports.scanLibrary = async (req, res) => {
   try {
@@ -137,6 +138,10 @@ exports.scanLibrary = async (req, res) => {
           }
         }
 
+        // Existing books for this author, matched by normalized title so "The Russian Cage"
+        // reuses an existing "Russian Cage" instead of creating a duplicate.
+        const authorExistingBooks = await Book.findAll({ where: { authorId: author.id } });
+
         let authorImported = 0;
         for (const { file, folder: subFolder } of bookFiles) {
           const filePath = subFolder ? path.join(authorPath, subFolder, file) : path.join(authorPath, file);
@@ -167,16 +172,11 @@ exports.scanLibrary = async (req, res) => {
             .trim() || path.basename(file, path.extname(file)).trim();
           if (!cleanTitle) continue;
           
-          let book = await Book.findOne({
-            where: {
-              [Op.or]: [
-                { title: { [Op.like]: `%${cleanTitle}%` } },
-                { filePath }
-              ],
-              authorId: author.id,
-              mediaType
-            }
-          });
+          const titleKey = normalizeTitle(cleanTitle);
+          let book = authorExistingBooks.find((b) =>
+            b.filePath === filePath ||
+            (titleKey && b.mediaType === mediaType && normalizeTitle(b.title) === titleKey)
+          );
           
           if (!book) {
             book = await Book.create({
