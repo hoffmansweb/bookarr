@@ -218,6 +218,18 @@ const BookModal = ({ book, onClose, onUpdate }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${currentBook.title}"? This removes it for everyone.`)) return;
+    try {
+      await bookAPI.delete(currentBook.id);
+      toast.success('Book deleted');
+      onClose();
+      onUpdate();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete book');
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content book-modal" onClick={(e) => e.stopPropagation()}>
@@ -306,6 +318,14 @@ const BookModal = ({ book, onClose, onUpdate }) => {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {user?.role === 'admin' && isInDb && (
+            <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #38444d' }}>
+              <button onClick={handleDelete} style={{ background: '#3a1f24', color: '#ff8a80', width: '100%' }}>
+                Delete Book
+              </button>
             </div>
           )}
         </div>

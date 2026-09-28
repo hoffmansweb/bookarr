@@ -1,10 +1,12 @@
 import React from 'react';
 import AuthorAvatar from './AuthorAvatar';
 import { authorAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import './AuthorCard.css';
 
 const AuthorCard = ({ author, onUpdate, isSearchResult }) => {
+  const { user } = useAuth();
   const handleAdd = async () => {
     try {
       setLoading(true);
@@ -96,13 +98,15 @@ const AuthorCard = ({ author, onUpdate, isSearchResult }) => {
           >
             {author.monitored ? '✓ Monitored' : 'Monitor'}
           </button>
-          <button onClick={handleRefresh} disabled={refreshing}>
-            {refreshing ? (
-              <>
-                <span className="spin-icon">🔄</span> Refreshing...
-              </>
-            ) : 'Refresh'}
-          </button>
+          {user?.role === 'admin' && (
+            <button onClick={handleRefresh} disabled={refreshing}>
+              {refreshing ? (
+                <>
+                  <span className="spin-icon">🔄</span> Refreshing...
+                </>
+              ) : 'Refresh'}
+            </button>
+          )}
         </div>
       </div>
     </div>

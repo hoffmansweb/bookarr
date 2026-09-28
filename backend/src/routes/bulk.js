@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { Book } = require('../models');
-const { auth } = require('../middleware/auth');
+const { auth, adminAuth } = require('../middleware/auth');
 
 router.use(auth);
+router.use(adminAuth);
 
 const ALLOWED_STATUSES = ['wanted', 'downloading', 'available', 'reading', 'completed', 'ignored'];
 

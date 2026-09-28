@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { bookAPI, bulkAPI, authorAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import BookCard from '../components/BookCard';
 import BookModal from '../components/BookModal';
@@ -11,6 +12,7 @@ import DuplicatesModal from '../components/DuplicatesModal';
 import './Books.css';
 
 const Books = () => {
+  const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [filter, setFilter] = useState('all');
   const [mediaFilter, setMediaFilter] = useState('all');
@@ -212,11 +214,15 @@ const Books = () => {
         <h1>Library</h1>
         <div className="header-actions">
           <SearchBar onSearch={handleSearch} placeholder="Search library..." />
-          <button onClick={() => setShowAddModal(true)}>+ Add Book</button>
-          <button onClick={() => setShowDuplicates(true)}>Duplicates</button>
-          <button onClick={() => setBulkMode(!bulkMode)}>
-            {bulkMode ? 'Cancel' : 'Bulk Edit'}
-          </button>
+          {user?.role === 'admin' && (
+            <>
+              <button onClick={() => setShowAddModal(true)}>+ Add Book</button>
+              <button onClick={() => setShowDuplicates(true)}>Duplicates</button>
+              <button onClick={() => setBulkMode(!bulkMode)}>
+                {bulkMode ? 'Cancel' : 'Bulk Edit'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { Author } = require('../models');
-const { auth } = require('../middleware/auth');
+const { auth, adminAuth } = require('../middleware/auth');
 
 router.get('/search-external', auth, async (req, res) => {
   try {
@@ -54,7 +54,7 @@ router.get('/search-external', auth, async (req, res) => {
   }
 });
 
-router.post('/add', auth, async (req, res) => {
+router.post('/add', adminAuth, async (req, res) => {
   try {
     const { name } = req.body;
     if (!name || typeof name !== 'string' || !name.trim()) {

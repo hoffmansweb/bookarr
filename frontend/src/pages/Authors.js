@@ -5,9 +5,11 @@ import AuthorModal from '../components/AuthorModal';
 import AuthorSearchModal from '../components/AuthorSearchModal';
 import SearchBar from '../components/SearchBar';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import './Authors.css';
 
 const Authors = () => {
+  const { user } = useAuth();
   const [authors, setAuthors] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -97,7 +99,9 @@ const Authors = () => {
         <h1>Authors</h1>
         <div className="header-actions">
           <SearchBar onSearch={handleLocalSearch} placeholder="Search authors or book titles..." />
-          <button onClick={handleExternalSearch} className="add-author-btn">+ Add New Author</button>
+          {user?.role === 'admin' && (
+            <button onClick={handleExternalSearch} className="add-author-btn">+ Add New Author</button>
+          )}
         </div>
       </div>
 

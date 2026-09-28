@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AuthorAvatar from './AuthorAvatar';
 import { authorAPI, nzbAPI, bookAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import SearchResultsModal from './SearchResultsModal';
 import BookDetailsModal from './BookDetailsModal';
@@ -16,6 +17,7 @@ const formatNames = (formats) => (formats || []).map(f => (f === 'audiobook' ? '
 const formatSuffix = (formats) => ((formats || []).length > 1 ? ` (${formatNames(formats)})` : '');
 
 const AuthorModal = ({ author, onClose, onUpdate }) => {
+  const { user } = useAuth();
   const [searchingBook, setSearchingBook] = useState(null);
   const [searchType, setSearchType] = useState(null); // 'auto' or 'manual'
   // book.id -> 'auto' | 'search' while that book's search is in flight. Mirrors
@@ -363,7 +365,7 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
                         {book.bookType === 'audiobook' ? '▶️ Play' : '📖 Read'}
                       </button>
                     )}
-                    {hasClients && (
+                    {user?.role === 'admin' && hasClients && (
                       <div className="book-actions">
                         <button 
                           onClick={() => handleAutoSearch(book)} 
@@ -413,7 +415,7 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
           </div>
 
           <div className="modal-actions-buttons">
-            {(() => {
+            {user?.role === 'admin' && (() => {
               const wantedCount = localAuthor.books?.filter(b => b.status === 'wanted').length || 0;
               return (
                 <button
@@ -432,21 +434,25 @@ const AuthorModal = ({ author, onClose, onUpdate }) => {
                 </button>
               );
             })()}
-            <button onClick={handleRefresh} disabled={refreshing}>
-              {refreshing ? (
-                <>
-                  <span className="spin-icon">🔄</span> Refreshing...
-                </>
-              ) : (
-                '🔄 Refresh'
-              )}
-            </button>
+            {user?.role === 'admin' && (
+              <button onClick={handleRefresh} disabled={refreshing}>
+                {refreshing ? (
+                  <>
+                    <span className="spin-icon">🔄</span> Refreshing...
+                  </>
+                ) : (
+                  '🔄 Refresh'
+                )}
+              </button>
+            )}
             <button onClick={handleMonitor} className={localAuthor.monitored ? 'monitored' : ''}>
               {localAuthor.monitored ? '✓ Monitored' : 'Monitor'}
             </button>
-            <button onClick={handleDelete} className="delete-btn">
-              Delete Author
-            </button>
+            {user?.role === 'admin' && (
+              <button onClick={handleDelete} className="delete-btn">
+                Delete Author
+              </button>
+            )}
           </div>
         </div>
       </div>
