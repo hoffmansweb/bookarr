@@ -291,7 +291,10 @@ const pathCandidates = (filePath) => {
 
   for (const { key: fromKey, to } of LIBRARY_PATH_REMAP) {
     if (key.startsWith(fromKey)) {
-      const suffix = normalized.slice(fromKey.length).replace(/^\\+/, '');
+      // The stored path uses backslashes (a Windows/UNC root); the remapped target may use
+      // forward slashes (a Docker mount), so normalise the suffix before joining. On Linux
+      // path.join does not treat "\" as a separator, which previously produced a wrong path.
+      const suffix = normalized.slice(fromKey.length).replace(/^\\+/, '').replace(/\\/g, '/');
       candidates.push(suffix ? path.join(to, suffix) : to);
     }
   }
